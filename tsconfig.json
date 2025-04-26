@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "types": ["vite", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@wayfinder/*": ["./test/support/workbench/assets/js/wayfinder/*"]
+    }
+  },
+  "include": ["vite.config.ts", "test/js/tests/**/*", "tests/js/support/build.ts"]
+}
