@@ -1,0 +1,14 @@
+{
+  "type": "module",
+  "description": "Testing the wayfinder generated routes",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "packageManager": "pnpm@9.8.0",
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "happy-dom": "^15.11.7",
+    "vitest": "^3.1.2"
+  }
+}

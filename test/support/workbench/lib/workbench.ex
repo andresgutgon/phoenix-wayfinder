@@ -1,3 +1,3 @@
-defmodule Wayfinder do
+defmodule Workbench do
   @moduledoc false
 end
