@@ -3,6 +3,7 @@
   "description": "Testing the wayfinder generated routes",
   "scripts": {
     "test": "vitest run",
+    "test:verbose": "pnpm run test --reporter verbose",
     "test:watch": "vitest watch"
   },
   "packageManager": "pnpm@9.8.0",
