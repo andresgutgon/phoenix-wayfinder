@@ -5,14 +5,13 @@ defmodule Wayfinder do
   alias Wayfinder.{Options, Processor}
 
   @spec generate(module(), Options.t()) :: :ok | {:error, Wayfinder.Error.t()}
-
   def generate(router, _opts) do
     case Processor.call(router) do
-      :ok ->
+      {:ok, _collections} ->
         :ok
-      {:error, %Wayfinder.Error{message: msg, reason: reason}} ->
-        Logger.error("Wayfinder failed: #{msg} (#{inspect(reason)})")
-        {:error, reason}
+      {:error, error} ->
+        Logger.error("Wayfinder failed: #{error.message} (#{inspect(error.reason)})")
+        {:error, error}
     end
   end
 end

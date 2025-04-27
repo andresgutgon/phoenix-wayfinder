@@ -8,7 +8,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@wayfinder/': './test/support/workbench/assets/js/wayfinder/',
+      '@routes/': './test/support/workbench/assets/js/routes/',
+      '@actions/': './test/support/workbench/assets/js/actions/',
     },
   },
 })

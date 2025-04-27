@@ -9,7 +9,8 @@
     "types": ["vite", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@wayfinder/*": ["./test/support/workbench/assets/js/wayfinder/*"]
+      "@routes/*": ["./test/support/workbench/assets/js/routes/*"],
+      "@actions/*": ["./test/support/workbench/assets/js/actions/*"]
     }
   },
   "include": ["vite.config.ts", "test/js/tests/**/*", "tests/js/support/build.ts"]

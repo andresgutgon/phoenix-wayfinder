@@ -2,20 +2,23 @@ defmodule Wayfinder.Processor do
   require Logger
   @moduledoc false
 
-  alias Wayfinder.Error
+  alias Wayfinder.{Collections, Error}
   alias Wayfinder.Processor.{Namer, Route}
 
-  @spec call(module()) :: :ok | :ok | {:error, Error.t()}
+  @spec call(module()) :: {:ok, Collections.t()} | {:error, Error.t()}
   def call(module) do
     try do
       raw_routes = collect(module)
-      _actions = group_by_actions(raw_routes)
+      actions = group_by_actions(raw_routes)
       routes = group_by_named(raw_routes)
-
 
       Logger.info("Named Routes:\n#{inspect(routes, pretty: true, limit: :infinity)}")
 
-      :ok
+      {:ok,
+       %Collections{
+         routes: routes,
+         actions: actions
+       }}
     rescue
       error ->
         {:error, Wayfinder.Error.new(Exception.message(error), :processor_failure)}
