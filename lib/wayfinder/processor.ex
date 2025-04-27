@@ -1,5 +1,4 @@
 defmodule Wayfinder.Processor do
-  require Logger
   @moduledoc false
 
   alias Wayfinder.{Collections, Error}
@@ -9,19 +8,15 @@ defmodule Wayfinder.Processor do
   def call(module) do
     try do
       raw_routes = collect(module)
-      actions = group_by_actions(raw_routes)
-      routes = group_by_named(raw_routes)
-
-      Logger.info("Named Routes:\n#{inspect(routes, pretty: true, limit: :infinity)}")
 
       {:ok,
        %Collections{
-         routes: routes,
-         actions: actions
+         routes: group_by_name(raw_routes),
+         actions: group_by_actions(raw_routes)
        }}
     rescue
       error ->
-        {:error, Wayfinder.Error.new(Exception.message(error), :processor_failure)}
+        {:error, Error.new(Exception.message(error), :processor_failure)}
     end
   end
 
@@ -32,8 +27,8 @@ defmodule Wayfinder.Processor do
     end)
   end
 
-  @spec group_by_named([Route.t()]) :: %{String.t() => [Route.t()]}
-  defp group_by_named(routes) do
+  @spec group_by_name([Route.t()]) :: %{String.t() => [Route.t()]}
+  defp group_by_name(routes) do
     routes
     |> Enum.filter(&user_defined_name?/1)
     |> Enum.group_by(&build_full_named/1)
