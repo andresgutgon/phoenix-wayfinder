@@ -7,11 +7,11 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "types": ["vite", "vitest/globals"],
-    "baseUrl": ".",
-    "paths": {
-      "@routes/*": ["./test/support/workbench/assets/js/routes/*"],
-      "@actions/*": ["./test/support/workbench/assets/js/actions/*"]
-    }
+    "baseUrl": "."
   },
-  "include": ["vite.config.ts", "test/js/tests/**/*", "tests/js/support/build.ts"]
+  "include": [
+    "vite.config.ts",
+    "test/js/tests/**/*",
+    "tests/js/support/build.ts"
+  ]
 }

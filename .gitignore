@@ -25,3 +25,6 @@ wayfinder-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 node_modules
+
+test/support/workbench/assets/js/actions
+test/support/workbench/assets/js/wayfinder
