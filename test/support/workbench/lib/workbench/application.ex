@@ -8,12 +8,6 @@ defmodule Workbench.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      WorkbenchWeb.Telemetry,
-      {DNSCluster, query: Application.get_env(:workbench, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Workbench.PubSub},
-      # Start a worker by calling: Workbench.Worker.start_link(arg)
-      # {Workbench.Worker, arg},
-      # Start to serve requests, typically the last entry
       WorkbenchWeb.Endpoint
     ]
 
