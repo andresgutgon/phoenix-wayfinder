@@ -1,21 +1,22 @@
-defmodule Wayfinder.Generator.BuildAction do
+require Logger
+
+defmodule Wayfinder.Typescript.BuildAction do
   @moduledoc false
 
   alias Wayfinder.Processor.Route
+  alias Wayfinder.Typescript.DocBlock
 
   def generate(%Route{} = route) do
+
+    Logger.info("ROUTE: #{inspect(route)}")
+
     safe_name = Route.js_method(route)
     path = route.path
     main_method = Enum.at(route.methods, 0)
     param_types = generate_args_type(path)
 
     """
-    import { queryParams, type QueryParams } from '@/wayfinder'
-
-    /**
-     * @see #{doc_reference(route)}
-     * @route #{path}
-     */
+    #{DocBlock.build(route)}
     export const #{safe_name} = (args: #{param_types}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
       url: string,
       method: '#{String.downcase(main_method)}',
@@ -35,17 +36,6 @@ defmodule Wayfinder.Generator.BuildAction do
 
     #{generate_form_object(safe_name, route, param_types)}
     """
-  end
-
-  defp doc_reference(%Route{name: name, action: action}) when is_binary(name), do: "#{name}.#{action}"
-
-  defp doc_reference(%Route{controller: controller, action: action}) do
-    controller
-    |> Module.split()
-    |> Enum.reverse()
-    |> Enum.take(1)
-    |> List.first()
-    |> then(&"#{&1}.#{action}")
   end
 
   defp extract_path_params(path) do
@@ -126,7 +116,7 @@ defmodule Wayfinder.Generator.BuildAction do
 
       return #{safe_name}.definition.url
         #{replacements}
-        .replace(/\\/+$/, '') + queryParams(options)
+        .replace(/\/+$/, '') + queryParams(options)
     }
     """
   end

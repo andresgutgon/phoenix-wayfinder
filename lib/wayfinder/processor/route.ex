@@ -1,20 +1,24 @@
 require Logger
 
 defmodule Wayfinder.Processor.Route do
+  alias Wayfinder.Processor.Introspect
+
   @moduledoc """
   Represents a simplified Phoenix route for TypeScript generation.
   """
 
   alias Wayfinder.Typescript.Helpers, as: Typescript
 
-  defstruct [:path, :methods, :controller, :action, :name]
+  defstruct [:path, :methods, :controller, :action, :name, :line, :file]
 
   @type t :: %__MODULE__{
           path: String.t(),
           methods: [String.t()],
           controller: module(),
           action: atom(),
-          name: String.t() | nil
+          name: String.t() | nil,
+          line: pos_integer() | nil,
+          file: String.t() | nil,
         }
 
   @doc """
@@ -28,11 +32,15 @@ defmodule Wayfinder.Processor.Route do
         helper: helper,
         verb: verb
       }) do
+    {line, file} = Introspect.source_location(controller, action) || {nil, nil}
+
     %__MODULE__{
       path: path,
       controller: controller,
       action: action,
       name: helper,
+      line: line,
+      file: file,
       methods: normalize_verbs(verb)
     }
   end
