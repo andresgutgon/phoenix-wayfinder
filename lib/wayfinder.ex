@@ -10,7 +10,7 @@ defmodule Wayfinder do
   def generate(router, opts) do
     case Processor.call(router) do
       {:ok, collections} ->
-        Generator.call(collections, opts)
+      Generator.call(collections, opts)
 
       {:error, error} ->
         Logger.error("Wayfinder failed: #{error.message} (#{inspect(error.reason)})")

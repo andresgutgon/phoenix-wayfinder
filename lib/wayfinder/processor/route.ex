@@ -1,3 +1,5 @@
+require Logger
+
 defmodule Wayfinder.Processor.Route do
   @moduledoc """
   Represents a simplified Phoenix route for TypeScript generation.
@@ -41,26 +43,10 @@ defmodule Wayfinder.Processor.Route do
     Typescript.safe_method_name(to_string(action), "Method")
   end
 
-  #Phoenix helper names are not always valid JS method names.
-  @spec named_method(t()) :: String.t() | nil
-  def named_method(%__MODULE__{name: nil}), do: nil
-
-  @doc "Generate a JS-safe method name for named routes"
-  @spec named_method(t()) :: String.t()
-  def named_method(%__MODULE__{name: name}) do
-    Typescript.safe_method_name(last_named_segment(name), "Route")
-  end
-
   @doc "Return original action name"
   @spec original_js_method(t()) :: String.t()
   def original_js_method(%__MODULE__{action: action}) do
     to_string(action)
-  end
-
-  defp last_named_segment(name) when is_binary(name) do
-    name
-    |> String.split(".")
-    |> List.last()
   end
 
   defp normalize_verbs(verb) when is_binary(verb) do

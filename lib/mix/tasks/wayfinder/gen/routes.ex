@@ -9,13 +9,12 @@ defmodule Mix.Tasks.Wayfinder.Gen.Routes do
 
   usage:
       mix wayfinder.gen.routes
-      mix wayfinder.gen.routes --skip-actions
-      mix wayfinder.gen.routes --skip-routes
+      mix wayfinder.gen.routes --skip-actions (Useless unless we implement routes in the futture)
   """
 
   def run(args) do
     Mix.Task.run("app.start")
-    opts = Options.parse(args)
+    opts = Options.parse_cli_args(args)
     router = Application.get_env(:wayfinder, :router)
     Wayfinder.generate(router, opts)
   end
