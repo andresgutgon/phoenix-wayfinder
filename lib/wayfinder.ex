@@ -2,7 +2,6 @@ require Logger
 
 defmodule Wayfinder do
   @moduledoc false
-  @dialyzer {:nowarn_function, generate: 2}
 
   alias Wayfinder.{Generator, Error, Options, Processor}
 

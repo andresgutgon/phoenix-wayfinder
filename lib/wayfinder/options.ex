@@ -29,7 +29,7 @@ defmodule Wayfinder.Options do
          }}
 
       {:error, error} ->
-        raise Error.new("Failed to get app root: #{inspect(error)}", :filesystem_error)
+        {:error, Error.new("Failed to get app root: #{inspect(error)}", :filesystem_error)}
     end
   end
 
