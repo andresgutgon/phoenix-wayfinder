@@ -9,7 +9,6 @@
     "types": ["vite", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@routes/*": ["./test/support/workbench/assets/js/routes/*"],
       "@actions/*": ["./test/support/workbench/assets/js/actions/*"]
     }
   },

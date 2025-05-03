@@ -18,7 +18,7 @@ function getValue(value: string | number | boolean): string {
 const isBrowser = typeof window !== 'undefined'
 
 function browserParams({ includeExisting }: { includeExisting: boolean }) {
-  const search = isBrowser ? window.location.search : ''
+  const search = isBrowser && includeExisting ? window.location.search : ''
 
   return new URLSearchParams(search)
 }
