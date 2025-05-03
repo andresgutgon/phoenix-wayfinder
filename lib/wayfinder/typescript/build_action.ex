@@ -1,5 +1,3 @@
-require Logger
-
 defmodule Wayfinder.Typescript.BuildAction do
   @moduledoc false
 

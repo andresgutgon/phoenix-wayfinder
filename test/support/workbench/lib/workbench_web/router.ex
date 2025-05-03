@@ -43,11 +43,11 @@ defmodule WorkbenchWeb.Router do
     get("/parameter-names/:studly_case/studly", ParameterNameController, :studly)
     get("/parameter-names/:snake_case/snake", ParameterNameController, :snake)
 
-    # get(
-    #   "/parameter-names/:screaming_snake_case/screaming-snake",
-    #   ParameterNameController,
-    #   :screaming_snake
-    # )
+    get(
+      "/parameter-names/:screaming_snake_case/screaming-snake",
+      ParameterNameController,
+      :screaming_snake
+    )
     #
     # get("/nested/controller", Nested.NestedController, :nested)
     #

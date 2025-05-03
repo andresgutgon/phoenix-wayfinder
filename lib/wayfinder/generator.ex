@@ -5,7 +5,8 @@ defmodule Wayfinder.Generator do
   @dialyzer {:nowarn_function, call: 2}
 
   alias Wayfinder.{Collections, Options, Error}
-  alias Wayfinder.Typescript.BuildAction
+  alias Wayfinder.Processor.Route
+  alias Wayfinder.Typescript.BuildController
 
   @spec call(Collections.t(), Options.t()) :: :ok | {:error, Error.t()}
   def call(collections, opts) do
@@ -17,10 +18,19 @@ defmodule Wayfinder.Generator do
   end
 
   @spec generate_actions(Collections.t(), Options.t()) :: :ok | {:error, Error.t()}
-  defp generate_actions(%Collections{actions: actions}, _opts) do
-    last_action = Enum.at(actions, -1)
-    ts_code = BuildAction.generate(last_action)
-    Logger.info("Generated TypeScript code:\n\n#{ts_code}")
+  defp generate_actions(collection, _opts) do
+    grouped = group_by_controller(collection)
+
+    Enum.each(grouped, fn {controller, routes} ->
+      ts_code = BuildController.generate(controller, routes)
+
+      Logger.info("Generated TS: #{ts_code}")
+    end)
     :ok
+  end
+
+  @spec group_by_controller(Collections.t()) :: %{module() => [Route.t()]}
+  defp group_by_controller(%Collections{actions: actions}) do
+    Enum.group_by(actions, & &1.controller)
   end
 end

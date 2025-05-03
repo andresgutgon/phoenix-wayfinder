@@ -10,13 +10,7 @@ defmodule Wayfinder.Typescript.Helpers do
 
   @spec safe_method_name(String.t(), String.t()) :: String.t()
   def safe_method_name(name, suffix) do
-    name =
-      if String.contains?(name, "-") do
-        Macro.camelize(name)
-        |> then(fn str -> String.downcase(String.first(str)) <> String.slice(str, 1..-1//-1) end)
-      else
-        name
-      end
+    name = camelize_name(name)
 
     cond do
       name in @reserved_keywords ->
@@ -65,5 +59,10 @@ defmodule Wayfinder.Typescript.Helpers do
     #{inspect(actions, pretty: true, limit: :infinity)}
     """
     |> clean_typescript()
+  end
+
+  defp camelize_name(name) do
+    Macro.camelize(name)
+    |> then(fn str -> String.downcase(String.first(str)) <> String.slice(str, 1..-1//1) end)
   end
 end
