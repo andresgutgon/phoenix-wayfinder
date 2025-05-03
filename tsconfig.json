@@ -13,5 +13,9 @@
       "@actions/*": ["./test/support/workbench/assets/js/actions/*"]
     }
   },
-  "include": ["vite.config.ts", "test/js/tests/**/*", "tests/js/support/build.ts"]
+  "include": [
+    "vite.config.ts",
+    "test/js/tests/**/*",
+    "tests/js/support/build.ts"
+  ]
 }
