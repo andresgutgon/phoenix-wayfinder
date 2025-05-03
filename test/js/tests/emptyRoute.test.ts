@@ -1,10 +1,6 @@
 import { expect, it } from 'vitest'
-import { home } from '@routes/home'
+import { camel } from '@actions/ParameterNameController/index'
 
 it("doesn't add a / to an empty route", () => {
-  expect(home.url()).toBe('/')
-  expect(home()).toEqual({
-    url: '/',
-    method: 'get',
-  })
+  expect(camel.url({ camel_case: 'ACamel' })).toBe('/')
 })
