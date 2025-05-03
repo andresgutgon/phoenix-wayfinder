@@ -19,9 +19,10 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
         #{parts.parsed_args}
       }
 
-      return #{safe_name}.definition.url
+      return (
+        #{safe_name}.definition.url
         #{parts.replacements}
-        .replace(/\/+$/, '') + queryParams(options)
+      ).replace(/\\/+$/, '') + queryParams(options)
     }
     """
   end
@@ -63,7 +64,7 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
       Enum.map_join(params, ",\n  ", fn param -> "#{param}: args.#{param}" end)
 
     replacements =
-      Enum.map_join(params, "\n    ", fn param ->
+      Enum.map_join(params, "\n        ", fn param ->
         ".replace(':#{param}', parsedArgs.#{param}.toString())"
       end)
 
