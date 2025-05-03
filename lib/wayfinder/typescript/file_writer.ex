@@ -6,7 +6,9 @@ defmodule Wayfinder.Typescript.FileWriter do
   the destination folder
   """
 
-  alias Wayfinder.Error
+  alias Wayfinder.{Error, Options}
+
+  @helper_path "assets/js/wayfinder"
 
   @spec write(String.t(), String.t(), keyword()) :: :ok | {:error, term()}
   def write(relative_path, code, _opts \\ []) do
@@ -35,6 +37,22 @@ defmodule Wayfinder.Typescript.FileWriter do
       |> drop_app_namespace()
 
     Path.join(parts ++ ["index.ts"])
+  end
+
+  @spec copy_typescript_helper(Options.t()) :: :ok | {:error, Error.t()}
+  def copy_typescript_helper(opts) do
+    target_path = Path.join(opts.app_root, @helper_path)
+    try do
+      File.mkdir_p!(target_path)
+      source_file = Path.join([opts.package_root, @helper_path, "index.ts"])
+      target_file = Path.join(target_path, "index.ts")
+      File.cp!(source_file, target_file)
+
+      :ok
+    rescue
+      error ->
+        {:error, Error.new("Unexpected error: #{Exception.message(error)}", :filesystem_error)}
+    end
   end
 
   defp drop_app_namespace([_app | rest]), do: rest

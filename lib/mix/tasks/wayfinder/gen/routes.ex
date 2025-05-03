@@ -1,7 +1,6 @@
 defmodule Mix.Tasks.Wayfinder.Gen.Routes do
   @shortdoc "generates typescript routes with wayfinder."
   use Mix.Task
-  alias Wayfinder.Options
 
   @moduledoc """
   scans your phoenix router and generates actions and routes
@@ -14,8 +13,7 @@ defmodule Mix.Tasks.Wayfinder.Gen.Routes do
 
   def run(args) do
     Mix.Task.run("app.start")
-    opts = Options.parse_cli_args(args)
     router = Application.get_env(:wayfinder, :router)
-    Wayfinder.generate(router, opts)
+    Wayfinder.generate(router, args)
   end
 end

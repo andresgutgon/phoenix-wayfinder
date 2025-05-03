@@ -7,18 +7,24 @@ defmodule Wayfinder.Generator do
   alias Wayfinder.Typescript.{BuildController, FileWriter}
 
   @spec call(Routes.t(), Options.t()) :: :ok | {:error, Error.t()}
-  def call(routes, _opts) do
+  def call(routes, opts) do
     grouped = group_by_controller(routes)
 
-    Enum.reduce_while(grouped, :ok, fn {controller, routes}, :ok ->
-      ts_code = BuildController.generate(controller, routes)
-      relative_path = FileWriter.controller_path(controller)
+    case FileWriter.copy_typescript_helper(opts) do
+      :ok ->
+        Enum.reduce_while(grouped, :ok, fn {controller, routes}, :ok ->
+          ts_code = BuildController.generate(controller, routes)
+          relative_path = FileWriter.controller_path(controller)
 
-      case FileWriter.write(relative_path, ts_code) do
-        :ok -> {:cont, :ok}
-        {:error, error} -> {:halt, {:error, error}}
-      end
-    end)
+          case FileWriter.write(relative_path, ts_code) do
+            :ok -> {:cont, :ok}
+            {:error, error} -> {:halt, {:error, error}}
+          end
+        end)
+      {:error, error} ->
+        Logger.info("Error: #{inspect(error)}")
+        {:error, error}
+    end
   end
 
   @spec group_by_controller(Routes.t()) :: %{module() => [Route.t()]}
