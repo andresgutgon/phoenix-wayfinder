@@ -20,7 +20,7 @@ defmodule Wayfinder.Generator do
   defp generate_actions(%Collections{actions: actions}, _opts) do
     last_action = Enum.at(actions, -1)
     ts_code = BuildAction.generate(last_action)
-    # Logger.info("Generated TypeScript code:\n\n#{ts_code}")
+    Logger.info("Generated TypeScript code:\n\n#{ts_code}")
     :ok
   end
 end

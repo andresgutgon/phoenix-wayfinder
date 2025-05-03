@@ -18,7 +18,7 @@ defmodule Wayfinder.Processor.Route do
           action: atom(),
           name: String.t() | nil,
           line: pos_integer() | nil,
-          file: String.t() | nil,
+          file: String.t() | nil
         }
 
   @doc """
@@ -32,7 +32,7 @@ defmodule Wayfinder.Processor.Route do
         helper: helper,
         verb: verb
       }) do
-    {line, file} = Introspect.source_location(controller, action) || {nil, nil}
+    {line, file} = Introspect.source_location(controller, action)
 
     %__MODULE__{
       path: path,
@@ -41,7 +41,7 @@ defmodule Wayfinder.Processor.Route do
       name: helper,
       line: line,
       file: file,
-      methods: normalize_verbs(verb)
+      methods: normalize_verbs_with_head(verb)
     }
   end
 
@@ -55,6 +55,17 @@ defmodule Wayfinder.Processor.Route do
   @spec original_js_method(t()) :: String.t()
   def original_js_method(%__MODULE__{action: action}) do
     to_string(action)
+  end
+
+  defp normalize_verbs_with_head(verb) do
+    normalize_verbs(verb)
+    |> then(fn methods ->
+      if "get" in methods and "head" not in methods do
+        methods ++ ["head"]
+      else
+        methods
+      end
+    end)
   end
 
   defp normalize_verbs(verb) when is_binary(verb) do

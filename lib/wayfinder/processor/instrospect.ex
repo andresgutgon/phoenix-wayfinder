@@ -19,35 +19,39 @@ defmodule Wayfinder.Processor.Introspect do
       iex> source_location(MyAppWeb.PostController, :index)
       {15, "/app/lib/my_app_web/controllers/post_controller.ex"}
   """
-  @spec source_location(module(), atom()) :: location | nil
-  def source_location(module, function_name) when is_atom(module) and is_atom(function_name) do
+  @spec source_location(module(), atom()) :: location
+  def source_location(module, function_name)
+      when is_atom(module) and is_atom(function_name) do
     beam_path = :code.which(module)
+    source_location(beam_path, module, function_name)
+  end
 
-    Logger.info("Beam path: #{inspect(beam_path)}")
-    Logger.info("Chunks: #{inspect(:beam_lib.chunks(beam_path, [:debug_info]))}")
+  defp source_location(beam_path, _module, _function) when not is_list(beam_path),
+    do: {nil, nil}
 
-    if is_binary(beam_path) do
-      case :beam_lib.chunks(beam_path, [:debug_info]) do
-        {:ok,
-         {_,
-          [
-            debug_info:
-              {:debug_info_v1, :elixir_erl, {:elixir_v1, %{file: file, definitions: defs}, _}}
-          ]}} ->
-          Enum.find_value(defs, fn
-            {{^function_name, _arity}, :def, meta, _} ->
-              line = Keyword.get(meta, :line)
-              if line, do: {file, line}
+  defp source_location(beam_path, module, function_name) do
+    case :beam_lib.chunks(beam_path, [:debug_info]) do
+      {:ok, {^module, [debug_info: {:debug_info_v1, :elixir_erl, {_, meta, _}}]}} ->
+        extract_location(meta, function_name)
 
-            _ ->
-              nil
-          end)
+      _ ->
+        {nil, nil}
+    end
+  end
+
+  defp extract_location(%{file: file, definitions: defs}, function_name) do
+    {line, _} =
+      Enum.find_value(defs, {nil, nil}, fn
+        {{^function_name, _arity}, :def, meta, _} ->
+          line = Keyword.get(meta, :line)
+          {line, true}
 
         _ ->
           nil
-      end
-    else
-      nil
-    end
+      end)
+
+    {line, Path.relative_to_cwd(file)}
   end
+
+  defp extract_location(_, _), do: {nil, nil}
 end

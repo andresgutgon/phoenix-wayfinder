@@ -4,38 +4,72 @@ defmodule Wayfinder.Typescript.BuildAction do
   @moduledoc false
 
   alias Wayfinder.Processor.Route
-  alias Wayfinder.Typescript.DocBlock
 
+  alias Wayfinder.Typescript.{
+    DocBlock,
+    BuildHttpMethods,
+    BuildUrlFunction,
+    BuildFormObject
+  }
+
+  @type opts :: %{
+          safe_name: String.t(),
+          path: String.t(),
+          main_method: String.t(),
+          path_params: [String.t()],
+          param_types: String.t(),
+          doc_block: String.t(),
+          route: Route.t()
+        }
+
+  @spec generate(Route.t()) :: String.t()
   def generate(%Route{} = route) do
+    # {generate_form_object(safe_name, route, param_types)}
+    opts = build_opts(route)
+    Enum.join(
+      [
+        build_export(opts),
+        BuildUrlFunction.build(opts),
+        BuildHttpMethods.build(opts),
+        BuildFormObject.build(opts)
+      ],
+      "\n\n"
+    )
+  end
 
-    Logger.info("ROUTE: #{inspect(route)}")
-
-    safe_name = Route.js_method(route)
-    path = route.path
-    main_method = Enum.at(route.methods, 0)
-    param_types = generate_args_type(path)
+  @spec build_export(opts()) :: String.t()
+  defp build_export(opts) do
+    main_method = opts.main_method
+    safe_name = opts.safe_name
 
     """
-    #{DocBlock.build(route)}
-    export const #{safe_name} = (args: #{param_types}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
+    #{opts.doc_block}
+    export const #{safe_name} = (args: #{opts.param_types}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
       url: string,
-      method: '#{String.downcase(main_method)}',
+      method: '#{main_method}',
     } => ({
       url: #{safe_name}.url(args, options),
-      method: '#{String.downcase(main_method)}',
+      method: '#{main_method}',
     })
 
     #{safe_name}.definition = {
-      methods: #{inspect(route.methods)},
-      url: '#{path}'
+      methods: #{inspect(opts.route.methods)},
+      url: '#{opts.path}'
     }
-
-    #{generate_url_function(safe_name, path, param_types)}
-
-    #{generate_http_methods(safe_name, route, param_types)}
-
-    #{generate_form_object(safe_name, route, param_types)}
     """
+  end
+
+  @spec build_opts(Route.t()) :: opts()
+  defp build_opts(route) do
+    %{
+      route: route,
+      doc_block: DocBlock.build(route),
+      safe_name: Route.js_method(route),
+      path: route.path,
+      main_method: String.downcase(Enum.at(route.methods, 0)),
+      path_params: extract_path_params(route.path),
+      param_types: generate_args_type(route.path)
+    }
   end
 
   defp extract_path_params(path) do
@@ -57,154 +91,6 @@ defmodule Wayfinder.Typescript.BuildAction do
         flat = Enum.map_join(params, ", ", &"#{&1}: string | number")
         list = Enum.map_join(params, ", ", &"#{&1}")
         "{ #{flat} } | [#{list}]"
-    end
-  end
-
-  defp generate_url_function(safe_name, path, _type_sig) do
-    params = extract_path_params(path)
-
-    param_parsing =
-      if length(params) == 1 do
-        """
-        if (typeof args === 'string' || typeof args === 'number') {
-          args = { #{hd(params)}: args }
-        }
-        """
-      else
-        ""
-      end
-
-    array_parsing =
-      if params != [] do
-        assigns =
-          Enum.with_index(params)
-          |> Enum.map(fn {p, i} -> "#{p}: args[#{i}]" end)
-          |> Enum.join(",\n      ")
-
-        """
-        if (Array.isArray(args)) {
-          args = {
-            #{assigns}
-          }
-        }
-        """
-      else
-        ""
-      end
-
-    parsed_args =
-      Enum.map_join(params, ",\n  ", fn param -> "#{param}: args.#{param}" end)
-
-    replacements =
-      Enum.map_join(params, "\n    ", fn param ->
-        ".replace(':#{param}', parsedArgs.#{param}.toString())"
-      end)
-
-    """
-    /**
-     * @see #{safe_name}
-     * @route #{path}
-     */
-    #{safe_name}.url = (args: any, options?: { query?: QueryParams, mergeQuery?: QueryParams }): string => {
-      #{param_parsing}
-
-      #{array_parsing}
-
-      const parsedArgs = {
-        #{parsed_args}
-      }
-
-      return #{safe_name}.definition.url
-        #{replacements}
-        .replace(/\/+$/, '') + queryParams(options)
-    }
-    """
-  end
-
-  defp generate_http_methods(safe_name, %Route{methods: methods}, type_sig) do
-    methods
-    |> Enum.map(fn method ->
-      """
-      /**
-       * @see #{safe_name}
-       */
-      #{safe_name}.#{String.downcase(method)} = (args: #{type_sig}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
-        url: string,
-        method: '#{String.downcase(method)}',
-      } => ({
-        url: #{safe_name}.url(args, options),
-        method: '#{String.downcase(method)}',
-      })
-      """
-    end)
-    |> Enum.join("\n\n")
-  end
-
-  defp generate_form_object(safe_name, %Route{methods: methods, path: path}, type_sig) do
-    main_method = Enum.at(methods, 0)
-
-    form_methods =
-      methods
-      |> Enum.map(fn method ->
-        method_type = String.downcase(method)
-
-        call =
-          if method_type == "get" do
-            "options"
-          else
-            """
-            {
-              [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                _method: '#{String.upcase(method)}',
-                ...(options?.query ?? options?.mergeQuery ?? {}),
-              }
-            }
-            """
-          end
-
-        """
-        /**
-         * @see #{safe_name}
-         * @route #{path}
-         */
-        #{safe_name}Form.#{method_type} = (args: #{type_sig}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
-          action: string,
-          method: '#{form_method_for(method)}',
-        } => ({
-          action: #{safe_name}.url(args, #{call}),
-          method: '#{form_method_for(method)}',
-        })
-        """
-      end)
-      |> Enum.join("\n\n")
-
-    """
-    /**
-     * @see #{safe_name}
-     * @route #{path}
-     */
-    const #{safe_name}Form = (args: #{type_sig}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
-      action: string,
-      method: '#{form_method_for(main_method)}',
-    } => ({
-      action: #{safe_name}.url(args, options),
-      method: '#{form_method_for(main_method)}',
-    })
-
-    #{form_methods}
-
-    #{safe_name}.form = #{safe_name}Form
-    """
-  end
-
-  defp form_method_for(http_method) do
-    http_method = String.downcase(http_method)
-
-    case http_method do
-      "get" -> "get"
-      "head" -> "get"
-      "options" -> "get"
-      _ -> "post"
     end
   end
 end
