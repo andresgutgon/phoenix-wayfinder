@@ -7,9 +7,10 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
   def build(opts) do
     parts = build_params(opts)
     safe_name = opts.safe_name
+
     """
     #{opts.doc_block}
-    #{safe_name}.url = (args: any, options?: { query?: QueryParams, mergeQuery?: QueryParams }): string => {
+    #{safe_name}.url = (args: #{opts.param_types}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): string => {
       #{parts.param_parsing}
 
       #{parts.array_parsing}

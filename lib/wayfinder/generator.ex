@@ -2,35 +2,27 @@ defmodule Wayfinder.Generator do
   @moduledoc false
   require Logger
 
-  @dialyzer {:nowarn_function, call: 2}
-
-  alias Wayfinder.{Collections, Options, Error}
+  alias Wayfinder.{Routes, Options, Error}
   alias Wayfinder.Processor.Route
-  alias Wayfinder.Typescript.BuildController
+  alias Wayfinder.Typescript.{BuildController, FileWriter}
 
-  @spec call(Collections.t(), Options.t()) :: :ok | {:error, Error.t()}
-  def call(collections, opts) do
-    with :ok <- generate_actions(collections, opts) do
-      :ok
-    else
-      {:error, error} -> {:error, error}
-    end
-  end
+  @spec call(Routes.t(), Options.t()) :: :ok | {:error, Error.t()}
+  def call(routes, _opts) do
+    grouped = group_by_controller(routes)
 
-  @spec generate_actions(Collections.t(), Options.t()) :: :ok | {:error, Error.t()}
-  defp generate_actions(collection, _opts) do
-    grouped = group_by_controller(collection)
-
-    Enum.each(grouped, fn {controller, routes} ->
+    Enum.reduce_while(grouped, :ok, fn {controller, routes}, :ok ->
       ts_code = BuildController.generate(controller, routes)
+      relative_path = FileWriter.controller_path(controller)
 
-      Logger.info("Generated TS: #{ts_code}")
+      case FileWriter.write(relative_path, ts_code) do
+        :ok -> {:cont, :ok}
+        {:error, error} -> {:halt, {:error, error}}
+      end
     end)
-    :ok
   end
 
-  @spec group_by_controller(Collections.t()) :: %{module() => [Route.t()]}
-  defp group_by_controller(%Collections{actions: actions}) do
+  @spec group_by_controller(Routes.t()) :: %{module() => [Route.t()]}
+  defp group_by_controller(%Routes{actions: actions}) do
     Enum.group_by(actions, & &1.controller)
   end
 end

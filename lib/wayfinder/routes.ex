@@ -1,4 +1,4 @@
-defmodule Wayfinder.Collections do
+defmodule Wayfinder.Routes do
   @moduledoc false
 
   alias Wayfinder.Processor.Route

@@ -3,13 +3,13 @@ require Logger
 defmodule Wayfinder.Processor do
   @moduledoc false
 
-  alias Wayfinder.{Collections, Error}
+  alias Wayfinder.{Routes, Error}
   alias Wayfinder.Processor.Route
 
   @spec call(module()) :: {:ok, Collections.t()} | {:error, Error.t()}
   def call(router) do
     try do
-      {:ok, %Collections{actions: collect(router)}}
+      {:ok, %Routes{actions: collect(router)}}
     rescue
       error ->
         {:error, Error.new(Exception.message(error), :processor_failure)}
