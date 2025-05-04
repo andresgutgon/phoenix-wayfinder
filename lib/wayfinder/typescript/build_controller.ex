@@ -10,8 +10,8 @@ defmodule Wayfinder.Typescript.BuildController do
   alias Wayfinder.Typescript.BuildAction
   alias Wayfinder.Typescript.Helpers, as: Typescript
 
-  @spec generate(module(), [Route.t()]) :: String.t()
-  def generate(controller, routes) do
+  @spec call(module(), [Route.t()], String.t()) :: String.t()
+  def call(controller, routes, imports) do
     code =
       Enum.map(routes, fn route ->
         BuildAction.generate(route)
@@ -21,6 +21,7 @@ defmodule Wayfinder.Typescript.BuildController do
 
     Enum.join(
       [
+        imports,
         Typescript.clean_typescript(code),
         build_exports(controller, routes)
       ],

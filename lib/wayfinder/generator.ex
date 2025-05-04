@@ -1,34 +1,27 @@
 defmodule Wayfinder.Generator do
   @moduledoc false
-  require Logger
 
   alias Wayfinder.{Routes, Options, Error}
-  alias Wayfinder.Processor.Route
   alias Wayfinder.Typescript.{BuildController, FileWriter}
 
   @spec call(Routes.t(), Options.t()) :: :ok | {:error, Error.t()}
   def call(routes, opts) do
-    grouped = group_by_controller(routes)
+    grouped = Enum.group_by(routes.actions, & &1.controller)
 
-    case FileWriter.copy_typescript_helper(opts) do
-      :ok ->
-        Enum.reduce_while(grouped, :ok, fn {controller, routes}, :ok ->
-          ts_code = BuildController.generate(controller, routes)
-          relative_path = FileWriter.controller_path(controller)
+    with :ok <- FileWriter.clean_actions_dir(opts),
+         :ok <- FileWriter.copy_typescript_helper(opts) do
+      Enum.reduce_while(grouped, :ok, fn {controller, routes}, :ok ->
+        paths = FileWriter.build_paths(controller, opts)
+        ts_code = BuildController.call(controller, routes, paths.imports_line)
 
-          case FileWriter.write(relative_path, ts_code) do
-            :ok -> {:cont, :ok}
-            {:error, error} -> {:halt, {:error, error}}
-          end
-        end)
+        case FileWriter.write(paths.controller_path, ts_code) do
+          :ok -> {:cont, :ok}
+          {:error, error} -> {:halt, {:error, error}}
+        end
+      end)
+    else
       {:error, error} ->
-        Logger.info("Error: #{inspect(error)}")
         {:error, error}
     end
-  end
-
-  @spec group_by_controller(Routes.t()) :: %{module() => [Route.t()]}
-  defp group_by_controller(%Routes{actions: actions}) do
-    Enum.group_by(actions, & &1.controller)
   end
 end
