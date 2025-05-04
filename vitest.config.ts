@@ -6,9 +6,4 @@ export default defineConfig({
     environment: 'happy-dom',
     globalSetup: 'test/js/support/build.ts',
   },
-  resolve: {
-    alias: {
-      '@actions/': './test/support/workbench/assets/js/actions/',
-    },
-  },
 })

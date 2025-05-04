@@ -17,10 +17,6 @@ defmodule WorkbenchWeb.Router do
     pipe_through(:browser)
 
     get("/", PageController, :home)
-    get("/invokable-controller", InvokableController, :show)
-    get("/invokable-plus-controller", InvokablePlusController, :index)
-    post("/invokable-plus-controller", InvokablePlusController, :store)
-
     get("/posts", PostController, :index, as: :posts_index)
     get("/posts/create", PostController, :create, as: :posts_create)
     post("/posts", PostController, :store, as: :posts_store)
@@ -31,13 +27,17 @@ defmodule WorkbenchWeb.Router do
 
     get("/dashboard", PageController, :dashboard)
 
+    post("/optional", OptionalController, :optional)
     post("/optional/:parameter", OptionalController, :optional)
+    post("/many-optional", OptionalController, :many_optional)
+    post("/many-optional/:one", OptionalController, :many_optional)
+    post("/many-optional/:one/:two", OptionalController, :many_optional)
     post("/many-optional/:one/:two/:three", OptionalController, :many_optional)
 
     post("/users/:user_id", ModelBindingController, :show)
 
     get("/keys/:key", KeyController, :show)
-    get("/keys/:key/uuid/edit", KeyController, :edit)
+    get("/keys/:key/edit", KeyController, :edit)
 
     get("/parameter-names/:camel_case/camel", ParameterNameController, :camel)
     get("/parameter-names/:studly_case/studly", ParameterNameController, :studly)
@@ -51,23 +51,11 @@ defmodule WorkbenchWeb.Router do
 
     get("/nested/controller", Nested.NestedController, :nested)
 
-
     get("/two-routes-one-action-1", TwoRoutesSameActionController, :same)
     get("/two-routes-one-action-2", TwoRoutesSameActionController, :same)
 
     get("/disallowed/delete", DisallowedMethodNameController, :delete)
-    get("/disallowed/404", DisallowedMethodNameController, :error_404, as: :disallowed_404)
 
     get("/anonymous-middleware", AnonymousMiddlewareController, :show)
   end
-
-  # scope "/api/v1", WorkbenchWeb.Api.V1 do
-  #   pipe_through(:api)
-  #
-  #   get("/tasks", TaskController, :tasks)
-  #
-  #   scope "/tasks/:task_id/task-status" do
-  #     get("/", TaskStatusController, :index, as: :index)
-  #   end
-  # end
 end
