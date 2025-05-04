@@ -7,23 +7,18 @@ defmodule Wayfinder.Typescript.BuildController do
   """
 
   alias Wayfinder.Processor.Route
-  alias Wayfinder.Typescript.BuildAction
+  alias Wayfinder.Typescript.BuildGroup
   alias Wayfinder.Typescript.Helpers, as: Typescript
 
-  @spec call(module(), [Route.t()], String.t()) :: String.t()
-  def call(controller, routes, imports) do
-    code =
-      Enum.map(routes, fn route ->
-        BuildAction.generate(route)
-      end)
-      |> Enum.join("\n\n")
-      |> String.trim()
+  @type group :: %{controller: module(), action: atom(), routes: [Route.t()]}
 
+  @spec call(group(), String.t()) :: String.t()
+  def call(group, imports) do
     Enum.join(
       [
         imports,
-        Typescript.clean_typescript(code),
-        build_exports(controller, routes)
+        Typescript.clean_typescript(BuildGroup.call(group) |> String.trim()),
+        build_exports(group.controller, group.routes)
       ],
       "\n\n"
     )

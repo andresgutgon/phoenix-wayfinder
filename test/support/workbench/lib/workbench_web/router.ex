@@ -28,11 +28,12 @@ defmodule WorkbenchWeb.Router do
     get("/dashboard", PageController, :dashboard)
 
     post("/optional", OptionalController, :optional)
+    get("/optional", OptionalController, :optional)
     post("/optional/:parameter", OptionalController, :optional)
-    post("/many-optional", OptionalController, :many_optional)
-    post("/many-optional/:one", OptionalController, :many_optional)
-    post("/many-optional/:one/:two", OptionalController, :many_optional)
-    post("/many-optional/:one/:two/:three", OptionalController, :many_optional)
+    # post("/many-optional", OptionalController, :many_optional)
+    # post("/many-optional/:one", OptionalController, :many_optional)
+    # post("/many-optional/:one/:two", OptionalController, :many_optional)
+    # post("/many-optional/:one/:two/:three", OptionalController, :many_optional)
 
     post("/users/:user_id", ModelBindingController, :show)
 

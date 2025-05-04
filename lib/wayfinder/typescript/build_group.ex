@@ -1,7 +1,19 @@
-defmodule Wayfinder.Typescript.BuildAction do
-  @moduledoc false
+defmodule Wayfinder.Typescript.BuildGroup do
+  @moduledoc """
+  Generates a Typescript group for a given route.
+  When user define this kind of routes
+
+  ```elixir
+  get "/users", UserController, :my_action
+  post "/users", UserController, :my_action
+  ```
+  It should generate only one myAction.url specification with
+  all the methods that this action can handle according to the router.
+
+  """
 
   alias Wayfinder.Processor.Route
+  alias Wayfinder.Typescript.BuildController, as: Controller
 
   alias Wayfinder.Typescript.{
     DocBlock,
@@ -17,13 +29,14 @@ defmodule Wayfinder.Typescript.BuildAction do
           path_params: [String.t()],
           param_types: String.t(),
           doc_block: String.t(),
-          route: Route.t()
+          route: Route.t(),
+          methods: [String.t()]
         }
 
-  @spec generate(Route.t()) :: String.t()
-  def generate(%Route{} = route) do
-    # {generate_form_object(safe_name, route, param_types)}
-    opts = build_opts(route)
+  @spec call(Controller.group()) :: String.t()
+  def call(group) do
+    opts = build_opts(group.routes)
+
     Enum.join(
       [
         build_export(opts),
@@ -57,8 +70,8 @@ defmodule Wayfinder.Typescript.BuildAction do
     """
   end
 
-  @spec build_opts(Route.t()) :: opts()
-  defp build_opts(route) do
+  @spec build_opts([Route.t()]) :: opts()
+  defp build_opts(routes) do
     %{
       route: route,
       doc_block: DocBlock.build(route),

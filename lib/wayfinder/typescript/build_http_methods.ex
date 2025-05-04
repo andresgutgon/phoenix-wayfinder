@@ -1,8 +1,8 @@
 defmodule Wayfinder.Typescript.BuildHttpMethods do
   @moduledoc false
-  alias Wayfinder.Typescript.BuildAction
+  alias Wayfinder.Typescript.BuildGroup
 
-  @spec build(BuildAction.opts()) :: String.t()
+  @spec build(BuildGroup.opts()) :: String.t()
   def build(opts) do
     opts.route.methods
     |> Enum.map(&build_function(opts, &1))
