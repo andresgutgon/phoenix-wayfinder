@@ -1,7 +1,8 @@
 require Logger
 defmodule Wayfinder.Typescript.BuildActions do
   @moduledoc """
-  Generates a Typescript group for a given route.
+  Generates a Typescript code for a controller / action
+  Each action can have one or more routes, and each route can have one or more HTTP methods.
   When user define this kind of routes
 
   ```elixir
@@ -10,7 +11,6 @@ defmodule Wayfinder.Typescript.BuildActions do
   ```
   It should generate only one myAction.url specification with
   all the methods that this action can handle according to the router.
-
   """
 
   alias Wayfinder.Processor.Route

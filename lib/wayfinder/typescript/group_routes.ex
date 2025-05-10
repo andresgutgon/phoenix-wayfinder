@@ -11,16 +11,65 @@ defmodule Wayfinder.Typescript.GroupRoutes do
 
   alias Wayfinder.Processor.Route
 
+  @type variant :: {
+          {module(), atom(), String.t()},
+          [Wayfinder.Processor.Route.t()]
+        }
+  @type indexed_variant :: {variant(), non_neg_integer()}
+
   @spec call([Route.t()]) :: [Route.t()]
   def call(routes) do
+    group_by_path(routes)
+    |> order_by_shortest_path()
+    |> collapse_and_disambiguate()
+  end
+
+  @spec group_by_path([Route.t()]) :: %{{module(), atom()} => [variant()]}
+  defp group_by_path(routes) do
     routes
-    |> Enum.group_by(&static_path_prefix/1)
-    |> Enum.map(fn {_prefix, group} ->
-      build_collapsed_route(group)
+    |> Enum.group_by(fn %Route{controller: c, action: a} = r ->
+      {c, a, static_path_prefix(r)}
+    end)
+    |> Enum.group_by(fn {{controller, action, _}, _routes} ->
+      {controller, action}
     end)
   end
 
-  defp build_collapsed_route(routes) do
+  @spec order_by_shortest_path(%{{module(), atom()} => [variant()]}) :: [{variant(), integer()}]
+  defp order_by_shortest_path(grouped_variants) do
+    grouped_variants
+    |> Enum.flat_map(fn {_key, variants} -> variants end)
+    |> Enum.sort_by(fn {{_controller, _action, _prefix}, routes} ->
+      static_segment_count(List.first(routes))
+    end)
+    |> Enum.with_index()
+  end
+
+  @spec collapse_and_disambiguate([indexed_variant()]) :: [Wayfinder.Processor.Route.t()]
+  defp collapse_and_disambiguate(indexed_variants) do
+    Enum.map(indexed_variants, fn {{{_controller, action, _prefix}, routes}, index} ->
+      merged_route = merge_route_group(routes)
+      action_name = desambiguate_action_name(merged_route, action, index)
+      %Route{merged_route | action: action}
+    end)
+  end
+
+  defp desambiguate_action_name(route, original_action, index) do
+    cond do
+      route.alias &&
+        route.alias != Atom.to_string(original_action) &&
+          String.to_atom(route.alias) != original_action ->
+        String.to_atom(route.alias)
+
+      index == 0 ->
+        original_action
+
+      true ->
+        String.to_atom("#{original_action}#{index + 1}")
+    end
+  end
+
+  defp merge_route_group(routes) do
     longest = Enum.max_by(routes, &param_count/1)
 
     merged_methods =
@@ -34,8 +83,6 @@ defmodule Wayfinder.Typescript.GroupRoutes do
         param_count(route) < param_count(longest)
       end)
 
-    Logger.debug("Longest route: #{inspect(longest)}")
-
     %Route{
       longest
       | methods: merged_methods,
@@ -44,20 +91,18 @@ defmodule Wayfinder.Typescript.GroupRoutes do
     }
   end
 
-  defp static_path_prefix(%Route{path: path}) do
+  defp split_static_segments(%Route{path: path}) do
     path
+    |> String.trim("/")
     |> String.split("/")
     |> Enum.reject(&String.starts_with?(&1, ":"))
-    |> Enum.join("/")
   end
+
+  defp static_path_prefix(route), do: split_static_segments(route) |> Enum.join("/")
+  defp static_segment_count(route), do: split_static_segments(route) |> length()
 
   defp param_count(%Route{path: path}) do
     extract_path_params(path) |> length()
-  end
-
-  defp extract_path_params(path) do
-    Regex.scan(~r/:([a-zA-Z_]+)/, path)
-    |> Enum.map(fn [_, param] -> param end)
   end
 
   @spec build_param_spec_by_method([Route.t()]) :: %{String.t() => [String.t()]}
@@ -73,5 +118,10 @@ defmodule Wayfinder.Typescript.GroupRoutes do
         end)
       end)
     end)
+  end
+
+  defp extract_path_params(path) do
+    Regex.scan(~r/:([a-zA-Z_]+)/, path)
+    |> Enum.map(fn [_, param] -> param end)
   end
 end
