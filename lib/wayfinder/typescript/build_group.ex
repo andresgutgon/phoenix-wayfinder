@@ -1,3 +1,4 @@
+require Logger
 defmodule Wayfinder.Typescript.BuildGroup do
   @moduledoc """
   Generates a Typescript group for a given route.
@@ -72,6 +73,9 @@ defmodule Wayfinder.Typescript.BuildGroup do
 
   @spec build_opts([Route.t()]) :: opts()
   defp build_opts(routes) do
+    Logger.debug("Building group for routes: #{inspect(routes)}")
+    route = Enum.at(routes, 0)
+
     %{
       route: route,
       doc_block: DocBlock.build(route),

@@ -1,5 +1,3 @@
-require Logger
-
 defmodule Wayfinder.Processor.Route do
   alias Wayfinder.Processor.Introspect
 
@@ -9,16 +7,28 @@ defmodule Wayfinder.Processor.Route do
 
   alias Wayfinder.Typescript.Helpers, as: Typescript
 
-  defstruct [:path, :methods, :controller, :action, :name, :line, :file]
+  defstruct [
+    :path,
+    :methods,
+    :controller,
+    :action,
+    :alias,
+    :line,
+    :file,
+    optional_args: false,
+    param_spec_by_method: %{}
+  ]
 
   @type t :: %__MODULE__{
           path: String.t(),
           methods: [String.t()],
           controller: module(),
           action: atom(),
-          name: String.t() | nil,
+          alias: String.t() | nil,
           line: pos_integer() | nil,
-          file: String.t() | nil
+          file: String.t() | nil,
+          optional_args: boolean(),
+          param_spec_by_method: %{String.t() => [String.t()]}
         }
 
   @doc """
@@ -29,7 +39,7 @@ defmodule Wayfinder.Processor.Route do
         path: path,
         plug: controller,
         plug_opts: action,
-        helper: helper,
+        helper: alias,
         verb: verb
       }) do
     {line, file} = Introspect.source_location(controller, action)
@@ -38,7 +48,7 @@ defmodule Wayfinder.Processor.Route do
       path: path,
       controller: controller,
       action: action,
-      name: helper,
+      alias: alias,
       line: line,
       file: file,
       methods: normalize_verbs_with_head(verb)

@@ -115,3 +115,19 @@ You can safely `.gitignore` the `wayfinder`, `actions`, and `routes` directories
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/wayfinder>.
+
+
+## OPTIONAL ARGS
+1- Simple case no args
+get("/optional", OptionalController, :optional)
+
+2- Different method same action
+post("/optional", OptionalController, :optional)
+
+3- With arguments
+get("/optional/:param1/:param2", OptionalController, :optional)
+
+4- Different path same controller and same action
+get("/optional2", OptionalController, :optional)
+
+

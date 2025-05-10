@@ -1,5 +1,3 @@
-require Logger
-
 defmodule Wayfinder.Typescript.BuildController do
   @moduledoc """
   Generates a Typescript controller for a given route.
