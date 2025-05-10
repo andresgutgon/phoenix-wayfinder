@@ -1,5 +1,5 @@
 require Logger
-defmodule Wayfinder.Typescript.BuildGroup do
+defmodule Wayfinder.Typescript.BuildActions do
   @moduledoc """
   Generates a Typescript group for a given route.
   When user define this kind of routes
@@ -15,6 +15,7 @@ defmodule Wayfinder.Typescript.BuildGroup do
 
   alias Wayfinder.Processor.Route
   alias Wayfinder.Typescript.BuildController, as: Controller
+  alias Wayfinder.Typescript.GroupRoutes
 
   alias Wayfinder.Typescript.{
     DocBlock,
@@ -36,6 +37,8 @@ defmodule Wayfinder.Typescript.BuildGroup do
 
   @spec call(Controller.group()) :: String.t()
   def call(group) do
+    routes = GroupRoutes.call(group.routes)
+    Logger.debug("Route Groups: #{inspect(routes)}")
     opts = build_opts(group.routes)
 
     Enum.join(
@@ -73,7 +76,6 @@ defmodule Wayfinder.Typescript.BuildGroup do
 
   @spec build_opts([Route.t()]) :: opts()
   defp build_opts(routes) do
-    Logger.debug("Building group for routes: #{inspect(routes)}")
     route = Enum.at(routes, 0)
 
     %{
