@@ -1,4 +1,4 @@
-defmodule Wayfinder.Typescript.FileWriter do
+defmodule Wayfinder.FileWriter do
   @moduledoc """
   This module is responsible for writing generated Typescript code to
   the destination folder

@@ -3,7 +3,8 @@ defmodule Wayfinder.Generator do
 
   alias Wayfinder.{Routes, Options, Error}
   alias Wayfinder.Processor.Route
-  alias Wayfinder.Typescript.{BuildController, FileWriter}
+  alias Wayfinder.FileWriter
+  alias Wayfinder.Typescript.BuildController
 
   @spec call(Routes.t(), Options.t()) :: :ok | {:error, Error.t()}
   def call(routes, opts) do

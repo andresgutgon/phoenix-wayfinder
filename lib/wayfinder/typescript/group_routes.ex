@@ -21,7 +21,7 @@ defmodule Wayfinder.Typescript.GroupRoutes do
   def call(routes) do
     group_by_path(routes)
     |> order_by_shortest_path()
-    |> collapse_and_disambiguate()
+    |> merge_variants_with_names()
   end
 
   @spec group_by_path([Route.t()]) :: %{{module(), atom()} => [variant()]}
@@ -45,12 +45,12 @@ defmodule Wayfinder.Typescript.GroupRoutes do
     |> Enum.with_index()
   end
 
-  @spec collapse_and_disambiguate([indexed_variant()]) :: [Wayfinder.Processor.Route.t()]
-  defp collapse_and_disambiguate(indexed_variants) do
+  @spec merge_variants_with_names([indexed_variant()]) :: [Wayfinder.Processor.Route.t()]
+  defp merge_variants_with_names(indexed_variants) do
     Enum.map(indexed_variants, fn {{{_controller, action, _prefix}, routes}, index} ->
       merged_route = merge_route_group(routes)
       action_name = desambiguate_action_name(merged_route, action, index)
-      %Route{merged_route | action: action}
+      %Route{merged_route | action: action_name}
     end)
   end
 
