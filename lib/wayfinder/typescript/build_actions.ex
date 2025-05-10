@@ -38,18 +38,20 @@ defmodule Wayfinder.Typescript.BuildActions do
   @spec call(Controller.group()) :: String.t()
   def call(group) do
     routes = GroupRoutes.call(group.routes)
-    Logger.debug("Route Groups: #{inspect(routes)}")
-    opts = build_opts(group.routes)
+    Logger.debug("Route Groups: #{inspect(routes, pretty: true)}")
 
-    Enum.join(
-      [
-        build_export(opts),
-        BuildUrlFunction.build(opts),
-        BuildHttpMethods.build(opts),
-        BuildFormObject.build(opts)
-      ],
-      "\n\n"
-    )
+    # opts = build_opts(group.routes)
+    #
+    # Enum.join(
+    #   [
+    #     build_export(opts),
+    #     BuildUrlFunction.build(opts),
+    #     BuildHttpMethods.build(opts),
+    #     BuildFormObject.build(opts)
+    #   ],
+    #   "\n\n"
+    # )
+    ""
   end
 
   @spec build_export(opts()) :: String.t()

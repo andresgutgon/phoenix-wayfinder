@@ -11,6 +11,13 @@ defmodule Wayfinder.Generator do
       Enum.group_by(routes.actions, fn %Route{controller: controller, action: action} ->
         {controller, action}
       end)
+      |> Enum.map(fn {{controller, action}, routes} ->
+        %{
+          controller: controller,
+          action: action,
+          routes: routes
+        }
+      end)
 
     with :ok <- FileWriter.clean_actions_dir(opts),
          :ok <- FileWriter.copy_typescript_helper(opts) do
