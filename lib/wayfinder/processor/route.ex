@@ -1,16 +1,34 @@
 defmodule Wayfinder.Processor.Route do
+  alias Wayfinder.Processor.Introspect
+
   @moduledoc """
   Represents a simplified Phoenix route for TypeScript generation.
   """
 
-  defstruct [:path, :methods, :controller, :action, :name]
+  alias Wayfinder.Typescript.Helpers, as: Typescript
+
+  defstruct [
+    :path,
+    :methods,
+    :controller,
+    :action,
+    :alias,
+    :line,
+    :file,
+    optional_args: false,
+    param_spec_by_method: %{}
+  ]
 
   @type t :: %__MODULE__{
           path: String.t(),
           methods: [String.t()],
           controller: module(),
           action: atom(),
-          name: String.t() | nil
+          alias: String.t() | nil,
+          line: pos_integer() | nil,
+          file: String.t() | nil,
+          optional_args: boolean(),
+          param_spec_by_method: %{String.t() => [String.t()]}
         }
 
   @doc """
@@ -21,16 +39,43 @@ defmodule Wayfinder.Processor.Route do
         path: path,
         plug: controller,
         plug_opts: action,
-        helper: helper,
+        helper: alias,
         verb: verb
       }) do
+    {line, file} = Introspect.source_location(controller, action)
+
     %__MODULE__{
       path: path,
       controller: controller,
       action: action,
-      name: helper,
-      methods: normalize_verbs(verb)
+      alias: alias,
+      line: line,
+      file: file,
+      methods: normalize_verbs_with_head(verb)
     }
+  end
+
+  @doc "Generate a JS-safe method name for controller actions"
+  @spec js_method(t()) :: String.t()
+  def js_method(%__MODULE__{action: action}) do
+    Typescript.safe_method_name(to_string(action), "Method")
+  end
+
+  @doc "Return original action name"
+  @spec original_js_method(t()) :: String.t()
+  def original_js_method(%__MODULE__{action: action}) do
+    to_string(action)
+  end
+
+  defp normalize_verbs_with_head(verb) do
+    normalize_verbs(verb)
+    |> then(fn methods ->
+      if "get" in methods and "head" not in methods do
+        methods ++ ["head"]
+      else
+        methods
+      end
+    end)
   end
 
   defp normalize_verbs(verb) when is_binary(verb) do
@@ -40,6 +85,6 @@ defmodule Wayfinder.Processor.Route do
   end
 
   defp normalize_verbs(verb) when is_atom(verb) do
-    [Atom.to_string(verb)]
+    [verb |> Atom.to_string() |> String.downcase()]
   end
 end

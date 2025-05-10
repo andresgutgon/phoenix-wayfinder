@@ -7,10 +7,11 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "types": ["vite", "vitest/globals"],
-    "baseUrl": ".",
-    "paths": {
-      "@wayfinder/*": ["./test/support/workbench/assets/js/wayfinder/*"]
-    }
+    "baseUrl": "."
   },
-  "include": ["vite.config.ts", "test/js/tests/**/*", "tests/js/support/build.ts"]
+  "include": [
+    "vite.config.ts",
+    "test/js/tests/**/*",
+    "tests/js/support/build.ts"
+  ]
 }
