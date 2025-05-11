@@ -1,8 +1,8 @@
 defmodule Wayfinder.Typescript.BuildFormObject do
   @moduledoc false
-  alias Wayfinder.Typescript.BuildAction
+  alias Wayfinder.Typescript.BuildActions
 
-  @spec build(BuildAction.opts()) :: String.t()
+  @spec build(BuildActions.opts()) :: String.t()
   def build(opts) do
     methods = opts.route.methods
     safe_name = opts.safe_name
@@ -29,7 +29,6 @@ defmodule Wayfinder.Typescript.BuildFormObject do
           end
 
         """
-        #{opts.doc_block}
         #{safe_name}Form.#{method_type} = (args: #{param_types}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
           action: string,
           method: '#{form_method_for(method)}',
@@ -42,7 +41,6 @@ defmodule Wayfinder.Typescript.BuildFormObject do
       |> Enum.join("\n\n")
 
     """
-    #{opts.doc_block}
     const #{safe_name}Form = (args: #{param_types}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
       action: string,
       method: '#{form_method_for(main_method)}',
