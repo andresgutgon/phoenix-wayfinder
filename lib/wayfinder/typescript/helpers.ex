@@ -36,6 +36,41 @@ defmodule Wayfinder.Typescript.Helpers do
     |> String.replace(~r/\n{3,}/, "\n\n")
   end
 
+  @type build_function_args :: %{
+          required(:action) => String.t() | nil,
+          required(:optional_args) => boolean(),
+          required(:args) => String.t(),
+          required(:method) => String.t()
+        }
+  @spec build_http_function(build_function_args()) :: String.t()
+  def build_http_function(%{
+        action: action,
+        args: args,
+        optional_args: optional_args,
+        method: method,
+      }) do
+    opts = "{ query?: QueryParams, mergeQuery?: QueryParams }"
+
+    """
+    (#{function_args(args, optional_args)}options?: #{opts}}): {
+      url: string
+      method: '#{method}',
+    } => ({
+      url: #{action}.url(#{url_args(args)}options),
+      method: '#{method}',
+    })
+    """
+  end
+
+  def function_args(), do: ""
+
+  def function_args(args, false), do: "args: #{args}, "
+
+  def function_args(args, true), do: "args?: #{args}, "
+
+  def url_args(), do: ""
+  def url_args(_args), do: "args, "
+
   defp camelize_name(name) do
     Macro.camelize(name)
     |> then(fn str -> String.downcase(String.first(str)) <> String.slice(str, 1..-1//1) end)

@@ -17,20 +17,22 @@ defmodule Wayfinder.Typescript.BuildActions do
 
   alias Wayfinder.Typescript.{
     DocBlock,
+    BuildParams,
+    BuildAction,
     BuildHttpMethods,
     BuildUrlFunction,
     BuildFormObject
   }
 
   @type opts :: %{
+          route: Route.t(),
           safe_name: String.t(),
           path: String.t(),
           main_method: String.t(),
-          path_params: [String.t()],
-          param_types: map(),
+          methods: [String.t()],
           doc_block: String.t(),
-          route: Route.t(),
-          methods: [String.t()]
+          function_arguments: map(),
+          params: [String.t()]
         }
 
   @spec call(Processor.controller()) :: String.t()
@@ -40,7 +42,7 @@ defmodule Wayfinder.Typescript.BuildActions do
         opts = build_opts(route)
 
         [
-          build_export(opts),
+          BuildAction.build(opts),
           BuildUrlFunction.build(opts),
           BuildHttpMethods.build(opts),
           BuildFormObject.build(opts)
@@ -50,80 +52,19 @@ defmodule Wayfinder.Typescript.BuildActions do
     )
   end
 
-  @spec build_export(opts()) :: String.t()
-  defp build_export(opts) do
-    main_method = opts.main_method
-    safe_name = opts.safe_name
-
-    """
-    #{opts.doc_block}
-    export const #{safe_name} = (args: #{opts.param_types}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
-      url: string,
-      method: '#{main_method}',
-    } => ({
-      url: #{safe_name}.url(args, options),
-      method: '#{main_method}',
-    })
-
-    #{safe_name}.definition = {
-      methods: #{inspect(opts.route.methods)},
-      url: '#{opts.path}'
-    }
-    """
-  end
-
   @spec build_opts(Route.t()) :: opts()
   defp build_opts(route) do
+    params = BuildParams.call(route)
+
     %{
       route: route,
       path: route.path,
       safe_name: Route.js_method(route),
       main_method: String.downcase(Enum.at(route.methods, 0)),
+      methods: route.methods,
       doc_block: DocBlock.build(route),
-      path_params: extract_path_params(route.path),
-      param_types: generate_args_type(route.path),
-      methods: route.methods
+      function_arguments: params.function_arguments,
+      params: params.list
     }
-  end
-
-  defp extract_path_params(path) do
-    Regex.scan(~r/:([a-zA-Z_]+)/, path)
-    |> Enum.map(fn [_, param] -> param end)
-  end
-
-  @spec format_param_type(Route.t()) :: map()
-  defp generate_param_types_by_method(route) do
-    Enum.into(route.param_spec_by_method, %{}, fn {method, params} ->
-      {String.downcase(method), format_param_type(params)}
-    end)
-  end
-
-  defp format_param_type([]), do: "void"
-
-  defp format_param_type([param]) do
-    "{ #{param}: string | number } | [#{param}: string | number] | string | number"
-  end
-
-  defp format_param_type(params) do
-    flat = Enum.map_join(params, ", ", &"#{&1}: string | number")
-    list = Enum.map_join(params, ", ", &"#{&1}")
-    "{ #{flat} } | [#{list}]"
-  end
-
-  defp generate_args_type(path) do
-    params = extract_path_params(path)
-
-    case params do
-      [] ->
-        "void"
-
-      [param] ->
-        "{ #{param}: string | number } | [#{param}: string | number] | string | number"
-
-      _ ->
-        flat = Enum.map_join(params, ", ", &"#{&1}: string | number")
-        list = Enum.map_join(params, ", ", &"#{&1}")
-        "{ #{flat} } | [#{list}]"
-    end
   end
 end
