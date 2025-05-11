@@ -1,5 +1,3 @@
-require Logger
-
 defmodule Wayfinder.Processor.Introspect do
   @moduledoc """
   Extracts `{line, file}` metadata for a given controller and action.

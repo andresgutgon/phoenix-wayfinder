@@ -1,3 +1,4 @@
+require Logger
 defmodule Wayfinder.Generator do
   @moduledoc false
 

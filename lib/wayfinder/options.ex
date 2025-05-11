@@ -1,5 +1,3 @@
-require Logger
-
 defmodule Wayfinder.Options do
   @moduledoc """
   Options for Wayfinder route generation.

@@ -1,5 +1,3 @@
-require Logger
-
 defmodule Wayfinder.Processor.GroupRoutes do
   @moduledoc """
   Groups a list of `%Wayfinder.Processor.Route{}` entries — all of which belong to the same

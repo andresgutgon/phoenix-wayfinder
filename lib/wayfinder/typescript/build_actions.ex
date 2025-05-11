@@ -1,5 +1,3 @@
-require Logger
-
 defmodule Wayfinder.Typescript.BuildActions do
   @moduledoc """
   Generates a Typescript code for a controller / action
@@ -29,7 +27,7 @@ defmodule Wayfinder.Typescript.BuildActions do
           path: String.t(),
           main_method: String.t(),
           path_params: [String.t()],
-          param_types: String.t(),
+          param_types: map(),
           doc_block: String.t(),
           route: Route.t(),
           methods: [String.t()]
@@ -91,6 +89,25 @@ defmodule Wayfinder.Typescript.BuildActions do
   defp extract_path_params(path) do
     Regex.scan(~r/:([a-zA-Z_]+)/, path)
     |> Enum.map(fn [_, param] -> param end)
+  end
+
+  @spec format_param_type(Route.t()) :: map()
+  defp generate_param_types_by_method(route) do
+    Enum.into(route.param_spec_by_method, %{}, fn {method, params} ->
+      {String.downcase(method), format_param_type(params)}
+    end)
+  end
+
+  defp format_param_type([]), do: "void"
+
+  defp format_param_type([param]) do
+    "{ #{param}: string | number } | [#{param}: string | number] | string | number"
+  end
+
+  defp format_param_type(params) do
+    flat = Enum.map_join(params, ", ", &"#{&1}: string | number")
+    list = Enum.map_join(params, ", ", &"#{&1}")
+    "{ #{flat} } | [#{list}]"
   end
 
   defp generate_args_type(path) do

@@ -1,5 +1,3 @@
-require Logger
-
 defmodule Wayfinder.Processor do
   @moduledoc false
 
