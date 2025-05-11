@@ -51,7 +51,6 @@ defmodule Wayfinder.Typescript.Helpers do
         optional_args: optional_args,
         method: method
       }) do
-
     """
     (#{function_args(args, optional_args)}options?: #{function_opts()}}): {
       url: string
@@ -69,6 +68,7 @@ defmodule Wayfinder.Typescript.Helpers do
 
   def function_args(args, false), do: "args: #{args}, "
 
+  # Second argument tells arguments are optional
   def function_args(args, true), do: "args?: #{args}, "
 
   defp url_args(nil), do: ""

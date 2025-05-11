@@ -1,6 +1,6 @@
 defmodule Wayfinder.Typescript.BuildFormObject do
   @moduledoc false
-  alias Wayfinder.Typescript.BuildActions
+  alias Wayfinder.Typescript.{BuildActions, Helpers}
 
   @spec build(BuildActions.opts()) :: String.t()
   def build(opts) do
@@ -29,7 +29,7 @@ defmodule Wayfinder.Typescript.BuildFormObject do
           end
 
         """
-        #{safe_name}Form.#{method_type} = (args: #{param_types}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): {
+        #{safe_name}Form.#{method_type} = (args: #{param_types}, options?: #{Helpers.function_opts()}): {
           action: string,
           method: '#{form_method_for(method)}',
         } => ({
@@ -50,7 +50,6 @@ defmodule Wayfinder.Typescript.BuildFormObject do
     })
 
     #{form_methods}
-
     #{safe_name}.form = #{safe_name}Form
     """
   end
