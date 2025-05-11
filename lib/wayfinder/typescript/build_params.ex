@@ -5,18 +5,22 @@ defmodule Wayfinder.Typescript.BuildParams do
 
   @ts_type "string | number"
 
-  @type method_argments :: %{String.t() => String.t() | nil}
+  @type argument :: String.t() | nil
+  @type method_argments :: %{String.t() => argument()}
   @type params :: %{
+          required(:url_arguments) => argument(),
           required(:method_arguments) => method_argments(),
-          required(:list) => [String.t()]
         }
   @spec call(Route.t()) :: params()
   def call(route) do
     %{
+      url_arguments: build_url_arguments(route.all_arguments),
       method_arguments: build_method_arguments(route),
-      list: extract_path_params(route.path)
     }
   end
+
+  defp build_url_arguments([]), do: nil
+  defp build_url_arguments(params), do: gen_args(params)
 
   @spec build_method_arguments(Route.t()) :: method_argments()
   defp build_method_arguments(route) do
@@ -35,11 +39,5 @@ defmodule Wayfinder.Typescript.BuildParams do
     flat = Enum.map_join(params, ", ", &"#{&1}: #{@ts_type}")
     tuple = Enum.map_join(params, ", ", fn _ -> "#{@ts_type}" end)
     "{ #{flat} } | [#{tuple}]"
-  end
-
-  @spec extract_path_params(String.t()) :: [String.t()]
-  defp extract_path_params(path) do
-    Regex.scan(~r/:([a-zA-Z_]+)/, path)
-    |> Enum.map(fn [_, param] -> param end)
   end
 end

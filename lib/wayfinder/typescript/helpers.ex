@@ -1,6 +1,8 @@
 defmodule Wayfinder.Typescript.Helpers do
   @moduledoc false
 
+  alias Wayfinder.Typescript.BuildParams
+
   @reserved_keywords ~w(
     break case catch class const continue debugger default delete do else
     export extends false finally for function if import in instanceof new null
@@ -37,9 +39,9 @@ defmodule Wayfinder.Typescript.Helpers do
   end
 
   @type build_function_args :: %{
-          required(:action) => String.t() | nil,
+          required(:action) => String.t(),
           required(:optional_args) => boolean(),
-          required(:args) => String.t(),
+          required(:args) => BuildParams.argument(),
           required(:method) => String.t()
         }
   @spec build_http_function(build_function_args()) :: String.t()
@@ -47,12 +49,11 @@ defmodule Wayfinder.Typescript.Helpers do
         action: action,
         args: args,
         optional_args: optional_args,
-        method: method,
+        method: method
       }) do
-    opts = "{ query?: QueryParams, mergeQuery?: QueryParams }"
 
     """
-    (#{function_args(args, optional_args)}options?: #{opts}}): {
+    (#{function_args(args, optional_args)}options?: #{function_opts()}}): {
       url: string
       method: '#{method}',
     } => ({
@@ -62,14 +63,16 @@ defmodule Wayfinder.Typescript.Helpers do
     """
   end
 
-  def function_args(), do: ""
+  def function_opts(), do: "{ query?: QueryParams, mergeQuery?: QueryParams }"
+
+  def function_args(nil, _), do: ""
 
   def function_args(args, false), do: "args: #{args}, "
 
   def function_args(args, true), do: "args?: #{args}, "
 
-  def url_args(), do: ""
-  def url_args(_args), do: "args, "
+  defp url_args(nil), do: ""
+  defp url_args(_args), do: "args, "
 
   defp camelize_name(name) do
     Macro.camelize(name)

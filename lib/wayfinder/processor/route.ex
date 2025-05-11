@@ -15,6 +15,7 @@ defmodule Wayfinder.Processor.Route do
     :alias,
     :line,
     :file,
+    all_arguments: [],
     optional_args: false,
     param_spec_by_method: %{}
   ]
@@ -27,6 +28,7 @@ defmodule Wayfinder.Processor.Route do
           alias: String.t() | nil,
           line: pos_integer() | nil,
           file: String.t() | nil,
+          all_arguments: [String.t()],
           optional_args: boolean(),
           param_spec_by_method: %{String.t() => [String.t()]}
         }

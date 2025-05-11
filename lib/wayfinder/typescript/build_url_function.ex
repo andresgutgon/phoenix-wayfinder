@@ -1,23 +1,22 @@
 defmodule Wayfinder.Typescript.BuildUrlFunction do
   @moduledoc false
 
-  alias Wayfinder.Typescript.BuildAction
+  alias Wayfinder.Typescript.{BuildActions, Helpers}
 
-  @spec build(BuildAction.opts()) :: String.t()
+  @spec build(BuildActions.opts()) :: String.t()
   def build(opts) do
+    args = Helpers.function_args(opts.url_arguments, opts.route.optional_args)
+    func_opts = Helpers.function_opts()
     parts = build_params(opts)
     safe_name = opts.safe_name
 
     """
-    #{opts.doc_block}
-    #{safe_name}.url = (args: #{opts.param_types}, options?: { query?: QueryParams, mergeQuery?: QueryParams }): string => {
+    #{safe_name}.url = (#{args}, options?: #{func_opts}): string => {
       #{parts.param_parsing}
 
       #{parts.array_parsing}
 
-      const parsedArgs = {
-        #{parts.parsed_args}
-      }
+      const parsedArgs = { #{parts.parsed_args} }
 
       return (
         #{safe_name}.definition.url
@@ -27,15 +26,15 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
     """
   end
 
-  @spec build_params(BuildAction.opts()) :: map()
+  @spec build_params(BuildActions.opts()) :: map()
   defp build_params(opts) do
-    params = opts.path_params
+    args = opts.route.all_arguments
 
     param_parsing =
-      if length(params) == 1 do
+      if length(args) == 1 do
         """
         if (typeof args === 'string' || typeof args === 'number') {
-          args = { #{hd(params)}: args }
+          args = { #{hd(args)}: args }
         }
         """
       else
@@ -43,9 +42,9 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
       end
 
     array_parsing =
-      if params != [] do
+      if args != [] do
         assigns =
-          Enum.with_index(params)
+          Enum.with_index(args)
           |> Enum.map(fn {p, i} -> "#{p}: args[#{i}]" end)
           |> Enum.join(",\n      ")
 
@@ -61,11 +60,11 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
       end
 
     parsed_args =
-      Enum.map_join(params, ",\n  ", fn param -> "#{param}: args.#{param}" end)
+      Enum.map_join(args, ",\n  ", fn arg -> "#{arg}: args.#{arg}" end)
 
     replacements =
-      Enum.map_join(params, "\n        ", fn param ->
-        ".replace(':#{param}', parsedArgs.#{param}.toString())"
+      Enum.map_join(args, "\n        ", fn arg ->
+        ".replace(':#{arg}', parsedArgs.#{arg}.toString())"
       end)
 
     %{

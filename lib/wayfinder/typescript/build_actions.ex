@@ -41,12 +41,12 @@ defmodule Wayfinder.Typescript.BuildActions do
       Enum.map(controller.routes, fn route ->
         opts = build_opts(route)
 
-        [
+        Enum.flat_map([
           BuildAction.build(opts),
           BuildUrlFunction.build(opts),
           BuildHttpMethods.build(opts),
           BuildFormObject.build(opts)
-        ]
+        ], & &1)
       end),
       "\n\n"
     )
@@ -60,11 +60,21 @@ defmodule Wayfinder.Typescript.BuildActions do
       route: route,
       path: route.path,
       safe_name: Route.js_method(route),
-      main_method: String.downcase(Enum.at(route.methods, 0)),
+      main_method: main_method(route),
       methods: route.methods,
       doc_block: DocBlock.build(route),
       function_arguments: params.function_arguments,
       params: params.list
     }
+  end
+
+  @spec main_method(Route.t()) :: String.t()
+  def main_method(%{methods: methods}) when is_list(methods) do
+    downcased = Enum.map(methods, &String.downcase/1)
+
+    case Enum.find(downcased, &(&1 == "get")) do
+      nil -> List.first(downcased) || "get"
+      method -> method
+    end
   end
 end

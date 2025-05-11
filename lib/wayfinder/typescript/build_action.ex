@@ -6,11 +6,10 @@ defmodule Wayfinder.Typescript.BuildAction do
   @spec build(BuildActions.opts()) :: String.t()
   def build(opts) do
     action = opts.safe_name
-    action_method = build_action_method(opts)
 
     """
     #{opts.doc_block}
-    export const #{action} = #{action_method}
+    export const #{action} = #{build_method(opts)}
 
     #{action}.definition = {
       methods: #{inspect(opts.route.methods)},
@@ -19,12 +18,12 @@ defmodule Wayfinder.Typescript.BuildAction do
     """
   end
 
-  @spec build_action_method(opts()) :: String.t()
-  defp build_action_method(opts) do
+  @spec build_method(BuildActions.opts()) :: String.t()
+  defp build_method(opts) do
     Helpers.build_http_function(%{
       action: opts.safe_name,
       optional_args: opts.route.optional_args,
-      args: opts.function_arguments,
+      args: opts.url_arguments,
       method: opts.main_method
     })
   end

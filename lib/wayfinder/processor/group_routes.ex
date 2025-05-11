@@ -84,6 +84,7 @@ defmodule Wayfinder.Processor.GroupRoutes do
     %Route{
       longest
       | methods: merged_methods,
+        all_arguments: extract_path_params(longest.path),
         optional_args: optional_args,
         param_spec_by_method: build_param_spec_by_method(routes)
     }
