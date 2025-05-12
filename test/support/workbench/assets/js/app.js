@@ -1,1 +1,0 @@
-/* Nothing to see here. This package is helpful to generate JS for you */
