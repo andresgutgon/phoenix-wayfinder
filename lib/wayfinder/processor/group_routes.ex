@@ -1,12 +1,23 @@
 defmodule Wayfinder.Processor.GroupRoutes do
   @moduledoc """
-  Groups a list of `%Wayfinder.Processor.Route{}` entries — all of which belong to the same
+  Groups a list of `%Phoenix.Router.Route{}` entries — all of which belong to the same
   controller and action — into one or more collapsed entries for TypeScript code generation.
 
   Routes are grouped by shared static path prefix. Within each group, the path with the most
   parameters becomes canonical. All methods across the group are merged. Argument handling is inferred based on the variation in path parameters arity.
+
+  Also this is my best shot to simulating Phoenix has built-in support for optional parameters
+  in the router. This is not a feature of Phoenix but if 2 routes are declared with 2 paths like this
+  ```elixir
+  get "/users/:id", UserController, :show
+  get "/users/:id/:name", UserController, :show
+  ```
+  We assume :name is optional.
+
+  TODO: Infer the parameters that are not optional because are in all the shared paths
   """
 
+  alias Wayfinder.Processor.Route
   alias Wayfinder.Processor.Route
 
   @type variant :: {
@@ -15,11 +26,11 @@ defmodule Wayfinder.Processor.GroupRoutes do
         }
   @type indexed_variant :: {variant(), non_neg_integer()}
 
-  @spec call([Route.t()]) :: [Route.t()]
-  def call(routes) do
+  @spec call([Route.t()], Route.phoenix_route_opts()) :: [Route.t()]
+  def call(routes, opts) do
     group_by_path(routes)
     |> order_by_shortest_path()
-    |> merge_variants_with_names()
+    |> merge_variants_with_names(opts)
   end
 
   @spec group_by_path([Route.t()]) :: %{{module(), atom()} => [variant()]}
@@ -43,31 +54,16 @@ defmodule Wayfinder.Processor.GroupRoutes do
     |> Enum.with_index()
   end
 
-  @spec merge_variants_with_names([indexed_variant()]) :: [Wayfinder.Processor.Route.t()]
-  defp merge_variants_with_names(indexed_variants) do
+  @spec merge_variants_with_names([indexed_variant()], Route.phoenix_route_opts()) :: [Wayfinder.Processor.Route.t()]
+  defp merge_variants_with_names(indexed_variants, opts) do
     Enum.map(indexed_variants, fn {{{_controller, action, _prefix}, routes}, index} ->
-      merged_route = merge_route_group(routes)
+      merged_route = merge_route_group(routes, opts)
       action_name = desambiguate_action_name(merged_route, action, index)
       %Route{merged_route | action: action_name}
     end)
   end
 
-  defp desambiguate_action_name(route, original_action, index) do
-    cond do
-      route.alias &&
-        route.alias != Atom.to_string(original_action) &&
-          String.to_atom(route.alias) != original_action ->
-        String.to_atom(route.alias)
-
-      index == 0 ->
-        original_action
-
-      true ->
-        String.to_atom("#{original_action}#{index + 1}")
-    end
-  end
-
-  defp merge_route_group(routes) do
+  defp merge_route_group(routes, opts) do
     longest = Enum.max_by(routes, &param_count/1)
 
     merged_methods =
@@ -90,6 +86,27 @@ defmodule Wayfinder.Processor.GroupRoutes do
         optional_args: optional_args,
         param_spec_by_method: build_param_spec_by_method(routes)
     }
+  end
+
+  # Probably all I'm doing for not having automatic
+  # Phoenix alias from controller names is due to this code (BUG)
+  # But is fine. I prefer do this refactor because building our route
+  # after grouping and sorting by controller / action and path
+  # is more efficient.
+  # So review this now that we have "opts" from the caller.
+  defp desambiguate_action_name(route, original_action, index) do
+    cond do
+      route.alias &&
+        route.alias != Atom.to_string(original_action) &&
+          String.to_atom(route.alias) != original_action ->
+        String.to_atom(route.alias)
+
+      index == 0 ->
+        original_action
+
+      true ->
+        String.to_atom("#{original_action}#{index + 1}")
+    end
   end
 
   defp split_static_segments(%Route{path: path}) do

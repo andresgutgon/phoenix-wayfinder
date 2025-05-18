@@ -8,7 +8,6 @@ defmodule Wayfinder.Processor do
 
   @type controller :: %{
           module: module(),
-          controller_name: String.t(),
           controller_parts: [String.t()],
           action: atom(),
           routes: [Route.t()]
@@ -45,7 +44,11 @@ defmodule Wayfinder.Processor do
         # TODO: All this module works with our routes.
         # It should work with PhoenixRoute and at the end
         # Call Route.from_phoenix_route/2
-        routes: GroupRoutes.call(routes)
+        routes:
+          GroupRoutes.call(routes, %{
+            controller_parts: controller_parts,
+            controller_name_action: controller_name_action
+          })
       }
     end)
   end
@@ -54,7 +57,8 @@ defmodule Wayfinder.Processor do
   defp build_controller_name_action(controller_parts) do
     List.last(controller_parts)
     |> String.replace_suffix("Controller", "")
-    |> String.replace(~r/([A-Z])/, "_\\1")
+    # Insert underscore between lowercase and uppercase
+    |> String.replace(~r/([a-z0-9])([A-Z])/, "\\1_\\2")
     |> String.downcase()
   end
 
