@@ -81,6 +81,8 @@ defmodule Wayfinder.Processor.GroupRoutes do
         param_count(route) < param_count(longest)
       end)
 
+    ## Longest has to be converted to %Route{} from %Phoenix.Router.Route{}
+    ## Use the `from_phoenix_route/2` function to convert it
     %Route{
       longest
       | methods: merged_methods,

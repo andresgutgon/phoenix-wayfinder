@@ -26,11 +26,10 @@ defmodule Wayfinder.FileWriter do
     end
   end
 
-  @spec build_paths(module(), Options.t()) :: paths()
-  def build_paths(controller, opts) do
+  @spec build_paths([String.t()], Options.t()) :: paths()
+  def build_paths(controller_parts, opts) do
     actions_dir = Path.join(opts.app_root, @actions_path)
-    parts = get_controller_path_parts(controller)
-    constroller_path = Path.join([actions_dir] ++ parts ++ ["index.ts"])
+    constroller_path = Path.join([actions_dir] ++ controller_parts ++ ["index.ts"])
 
     import_path = build_import_path(constroller_path, opts)
     import_modules = "import { queryParams, type QueryParams } from"
@@ -103,15 +102,4 @@ defmodule Wayfinder.FileWriter do
 
     "./" <> import_path
   end
-
-  @spec get_controller_path_parts(module()) :: [String.t()]
-  def get_controller_path_parts(controller) do
-    controller
-    |> Atom.to_string()
-    |> String.replace_prefix("Elixir.", "")
-    |> String.split(".")
-    |> drop_app_namespace()
-  end
-
-  defp drop_app_namespace([_app | rest]), do: rest
 end

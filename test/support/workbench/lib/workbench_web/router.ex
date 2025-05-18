@@ -28,11 +28,11 @@ defmodule WorkbenchWeb.Router do
     # get("/dashboard", PageController, :dashboard)
 
     # Combinations
-    get("/optional", OptionalController, :optional)
-    post("/optional", OptionalController, :optional)
-    post("/optional/:parameter", OptionalController, :optional)
-    get("/different/path/optional", OptionalController, :optional)
-    get("/different/with/alias", OptionalController, :optional, as: :optional_different)
+    # get("/optional", OptionalController, :optional)
+    # post("/optional", OptionalController, :optional)
+    # post("/optional/:parameter", OptionalController, :optional)
+    # get("/different/path/optional", OptionalController, :optional)
+    # get("/different/with/alias", OptionalController, :optional, as: :optional_different)
 
     # post("/many-optional", OptionalController, :many_optional)
     # post("/many-optional/:one", OptionalController, :many_optional)
@@ -59,7 +59,7 @@ defmodule WorkbenchWeb.Router do
     # get("/two-routes-one-action-1", TwoRoutesSameActionController, :same)
     # get("/two-routes-one-action-2", TwoRoutesSameActionController, :same)
 
-    # get("/disallowed/delete", DisallowedMethodNameController, :delete)
+    get("/disallowed/delete", DisallowedMethodNameController, :delete)
 
     # get("/anonymous-middleware", AnonymousMiddlewareController, :show)
   end

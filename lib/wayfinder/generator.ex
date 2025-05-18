@@ -11,7 +11,7 @@ defmodule Wayfinder.Generator do
     case FileWriter.prepare(opts) do
       :ok ->
         Enum.reduce_while(controllers, :ok, fn controller, :ok ->
-          paths = FileWriter.build_paths(controller.module, opts)
+          paths = FileWriter.build_paths(controller.controller_parts, opts)
           ts_code = BuildController.call(controller, paths.imports_line)
 
 

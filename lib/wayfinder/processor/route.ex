@@ -21,6 +21,11 @@ defmodule Wayfinder.Processor.Route do
     param_spec_by_method: %{}
   ]
 
+  @type phoenix_route_opts :: %{
+          controller_parts: [String.t()],
+          controller_name_action: String.t()
+        }
+
   @type t :: %__MODULE__{
           path: String.t(),
           methods: [String.t()],
@@ -38,14 +43,17 @@ defmodule Wayfinder.Processor.Route do
   @doc """
   Converts a raw %Phoenix.Router.Route{} into a %Wayfinder.Route{}.
   """
-  @spec from_phoenix_route(map()) :: t()
-  def from_phoenix_route(%{
-        path: path,
-        plug: controller,
-        plug_opts: action,
-        helper: alias,
-        verb: verb
-      }) do
+  @spec from_phoenix_route(map(), phoenix_route_opts()) :: t()
+  def from_phoenix_route(
+        %{
+          path: path,
+          plug: controller,
+          plug_opts: action,
+          helper: alias,
+          verb: verb
+        },
+        opts
+      ) do
     {line, file} = Introspect.source_location(controller, action)
 
     %__MODULE__{
@@ -53,23 +61,27 @@ defmodule Wayfinder.Processor.Route do
       controller: controller,
       action: action,
       original_action: action,
-      alias: alias,
+      alias: build_alias(action, alias, opts.controller_name_action),
       line: line,
       file: file,
-      methods: normalize_verbs(verb),
+      methods: normalize_verbs(verb)
     }
   end
+
+  @spec build_alias(atom(), String.t(), String.t()) :: String.t()
+  defp build_alias(action, original_alias, controller_name_action) do
+    if original_alias == controller_name_action do
+      action |> Atom.to_string()
+    else
+      original_alias
+    end
+  end
+
 
   @doc "Generate a JS-safe method name for controller actions"
   @spec js_method(t()) :: String.t()
   def js_method(%__MODULE__{action: action}) do
     Typescript.safe_method_name(to_string(action), "Method")
-  end
-
-  @doc "Return original action name"
-  @spec original_js_method(t()) :: String.t()
-  def original_js_method(%__MODULE__{action: action}) do
-    to_string(action)
   end
 
   defp normalize_verbs(verb) when is_binary(verb) do
