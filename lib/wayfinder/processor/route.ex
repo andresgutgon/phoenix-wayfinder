@@ -5,6 +5,7 @@ defmodule Wayfinder.Processor.Route do
   Represents a simplified Phoenix route for TypeScript generation.
   """
 
+  alias Phoenix.Router.Route, as: PhoenixRoute
   alias Wayfinder.Typescript.Helpers, as: Typescript
 
   defstruct [
@@ -18,7 +19,7 @@ defmodule Wayfinder.Processor.Route do
     :file,
     all_arguments: [],
     optional_args: false,
-    param_spec_by_method: %{}
+    params_by_method: %{}
   ]
 
   @type phoenix_route_opts :: %{
@@ -42,13 +43,13 @@ defmodule Wayfinder.Processor.Route do
           file: String.t() | nil,
           all_arguments: [String.t()],
           optional_args: boolean(),
-          param_spec_by_method: %{String.t() => [String.t()]}
+          params_by_method: params_by_method()
         }
 
   @doc """
   Converts a raw %Phoenix.Router.Route{} into a %Wayfinder.Route{}.
   """
-  @spec from_phoenix_route(map(), phoenix_route_opts()) :: t()
+  @spec from_phoenix_route(PhoenixRoute.t(), phoenix_route_opts()) :: t()
   def from_phoenix_route(
         %{
           path: path,
@@ -59,6 +60,7 @@ defmodule Wayfinder.Processor.Route do
         },
         opts
       ) do
+
     {line, file} = Introspect.source_location(controller, action)
 
     %__MODULE__{

@@ -1,31 +1,36 @@
-require Logger
-
 defmodule Wayfinder.Processor.GroupRoutes do
   @moduledoc """
-  Groups a list of `%Phoenix.Router.Route{}` entries — all of which belong to the same
-  controller and action — into one or more collapsed entries for TypeScript code generation.
+  Handle `%Phoenix.Router.Route{}` entries —
+  These are the steps in this module.
 
-  Routes are grouped by shared static path prefix. Within each group, the path with the most
-  parameters becomes canonical. All methods across the group are merged. Argument handling is inferred based on the variation in path parameters arity.
+  1. Group routes by their controller and action.
+  2. Routes are grouped by shared static path prefix. Ex.: `/users/:id` and `users/:id/:name`
+  3. Within each group, the path with the most parameters becomes canonical. Ex.: `/users/:id/:name`
+  4. Routes are sorted with the shortest path first.
+  5. All methods across the group are merged.
+  6. Argument handling is inferred based on the variation in path parameters arity.
+  7. We get for each route a map of all their arguments and if they are optional or not.
 
   Also this is my best shot to simulating Phoenix has built-in support for optional parameters
   in the router. This is not a feature of Phoenix but if 2 routes are declared with 2 paths like this
+
   ```elixir
   get "/users/:id", UserController, :show
   get "/users/:id/:name", UserController, :show
   ```
-  We assume :name is optional.
 
-  TODO: Infer the parameters that are not optional because are in all the shared paths
+  This is the logic here:
+  We assume `:name` is optional and `:id` is required.
+
+  We do all of this to generate a compresive TypeScript route definition
+
+  The final out is a list of `%Wayfinder.Processor.Route{}` structs
   """
 
   alias Phoenix.Router.Route, as: PhoenixRoute
-  alias Wayfinder.Processor.Route
+  alias Wayfinder.Processor.{BuildParams, Route}
 
-  @type variant :: {
-          {module(), atom(), String.t()},
-          [PhoenixRoute.t()]
-        }
+  @type variant :: {{module(), atom(), String.t()}, [PhoenixRoute.t()]}
   @type indexed_variant :: {variant(), non_neg_integer()}
 
   @spec call([PhoenixRoute.t()], Route.phoenix_route_opts()) :: [Route.t()]
@@ -56,9 +61,7 @@ defmodule Wayfinder.Processor.GroupRoutes do
     |> Enum.with_index()
   end
 
-  @spec merge_variants_with_names([indexed_variant()], Route.phoenix_route_opts()) :: [
-          Wayfinder.Processor.Route.t()
-        ]
+  @spec merge_variants_with_names([indexed_variant()], Route.phoenix_route_opts()) :: [Route.t()]
   defp merge_variants_with_names(indexed_variants, opts) do
     Enum.map(indexed_variants, fn {{{_controller, action, _prefix}, routes}, index} ->
       merged_route = merge_route_group(routes, opts)
@@ -69,28 +72,31 @@ defmodule Wayfinder.Processor.GroupRoutes do
 
   @spec merge_route_group([PhoenixRoute.t()], Route.phoenix_route_opts()) :: Route.t()
   defp merge_route_group(routes, opts) do
-    longest = Enum.max_by(routes, &param_count/1)
+    longest = Enum.max_by(routes, &BuildParams.params_count/1)
 
-    merged_methods =
-      routes
-      |> Enum.flat_map(fn route -> Route.normalize_verbs(Map.get(route, :verb)) end)
-      |> Enum.uniq()
-      |> Enum.sort()
-
-    optional_args =
-      Enum.any?(routes, fn route ->
-        param_count(route) < param_count(longest)
-      end)
-
-    final_route = Route.from_phoenix_route(longest, opts)
-
+    route = Route.from_phoenix_route(longest, opts)
     %Route{
-      final_route
-      | methods: merged_methods,
-        all_arguments: extract_path_params(longest.path),
-        optional_args: optional_args,
-        param_spec_by_method: build_param_spec_by_method(routes)
+      route
+      | methods: get_uniq_methods(routes),
+        all_arguments: BuildParams.extract_path_params(route.path),
+        optional_args: optional_args?(routes, route),
+        params_by_method: BuildParams.build(routes)
     }
+  end
+
+  @spec optional_args?([PhoenixRoute.t()], Route.t()) :: boolean()
+  defp optional_args?(routes, route) do
+    Enum.any?(routes, fn phx_route ->
+      BuildParams.params_count(phx_route) < BuildParams.params_count(route)
+    end)
+  end
+
+  @spec get_uniq_methods([PhoenixRoute.t()]) :: [String.t()]
+  defp get_uniq_methods(routes) do
+    routes
+    |> Enum.flat_map(fn route -> Route.normalize_verbs(Map.get(route, :verb)) end)
+    |> Enum.uniq()
+    |> Enum.sort()
   end
 
   @spec desambiguate_action_name(Route.t(), atom(), non_neg_integer()) :: atom()
@@ -107,44 +113,18 @@ defmodule Wayfinder.Processor.GroupRoutes do
     end
   end
 
-  @spec split_static_segments(PhoenixRoute.t()) :: [String.t()]
-  defp split_static_segments(%{path: path}) do
-    path
-    |> String.trim("/")
-    |> String.split("/")
-    |> Enum.reject(&String.starts_with?(&1, ":"))
-  end
-
   @spec static_path_prefix(PhoenixRoute.t()) :: String.t()
   defp static_path_prefix(route), do: split_static_segments(route) |> Enum.join("/")
 
   @spec static_segment_count(PhoenixRoute.t()) :: non_neg_integer()
   defp static_segment_count(route), do: split_static_segments(route) |> length()
 
-  defp param_count(%{path: path}) do
-    extract_path_params(path) |> length()
-  end
-
-  @spec build_param_spec_by_method([PhoenixRoute.t()]) :: Route.param_spec_by_method()
-  defp build_param_spec_by_method(routes) do
-    Enum.reduce(routes, %{}, fn route, acc ->
-      http_methods = Route.normalize_verbs(route.verb)
-
-      Enum.reduce(http_methods, acc, fn method, acc2 ->
-        method = String.downcase(method)
-
-        params = extract_path_params(route.path)
-
-        Map.update(acc2, method, params, fn existing ->
-          Enum.uniq(existing ++ params)
-        end)
-      end)
-    end)
-  end
-
-  @spec extract_path_params(String.t()) :: [String.t()]
-  defp extract_path_params(path) do
-    Regex.scan(~r/:([a-zA-Z_]+)/, path)
-    |> Enum.map(fn [_, param] -> param end)
+  @spec split_static_segments(PhoenixRoute.t()) :: [String.t()]
+  defp split_static_segments(%{path: path}) do
+    # TODO: Handle Phoenix route glob operator. Ex.: `*param`
+    path
+    |> String.trim("/")
+    |> String.split("/")
+    |> Enum.reject(&String.starts_with?(&1, ":"))
   end
 end
