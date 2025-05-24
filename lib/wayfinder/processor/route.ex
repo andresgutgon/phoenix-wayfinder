@@ -25,6 +25,11 @@ defmodule Wayfinder.Processor.Route do
           controller_parts: [String.t()],
           controller_name_action: String.t()
         }
+  @type param_spec :: %{
+          name: String.t(),
+          optional: boolean()
+        }
+  @type params_by_method :: %{String.t() => [param_spec()]}
 
   @type t :: %__MODULE__{
           path: String.t(),

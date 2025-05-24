@@ -125,9 +125,9 @@ defmodule Wayfinder.Processor.GroupRoutes do
     extract_path_params(path) |> length()
   end
 
-  @spec build_param_spec_by_method([PhoenixRoute.t()]) :: %{String.t() => [String.t()]}
-  defp build_param_spec_by_method(group) do
-    Enum.reduce(group, %{}, fn route, acc ->
+  @spec build_param_spec_by_method([PhoenixRoute.t()]) :: Route.param_spec_by_method()
+  defp build_param_spec_by_method(routes) do
+    Enum.reduce(routes, %{}, fn route, acc ->
       http_methods = Route.normalize_verbs(route.verb)
 
       Enum.reduce(http_methods, acc, fn method, acc2 ->
