@@ -29,7 +29,6 @@ defmodule Wayfinder.Processor do
 
   @spec group_by_controller_and_action([PhoenixRoute.t()]) :: [controller()]
   defp group_by_controller_and_action(all_routes) do
-    # |> Enum.map(&Route.from_phoenix_route/1) # Remove from here
     Enum.group_by(all_routes, fn phoenix_route ->
       %{controller: phoenix_route.plug, action: phoenix_route.plug_opts}
     end)
@@ -41,9 +40,6 @@ defmodule Wayfinder.Processor do
         module: controller,
         controller_parts: controller_parts,
         action: action,
-        # TODO: All this module works with our routes.
-        # It should work with PhoenixRoute and at the end
-        # Call Route.from_phoenix_route/2
         routes:
           GroupRoutes.call(routes, %{
             controller_parts: controller_parts,
@@ -55,9 +51,9 @@ defmodule Wayfinder.Processor do
 
   @spec build_controller_name_action([String.t()]) :: String.t()
   defp build_controller_name_action(controller_parts) do
+    # Ex.: MyHomeController -> my_home
     List.last(controller_parts)
     |> String.replace_suffix("Controller", "")
-    # Insert underscore between lowercase and uppercase
     |> String.replace(~r/([a-z0-9])([A-Z])/, "\\1_\\2")
     |> String.downcase()
   end

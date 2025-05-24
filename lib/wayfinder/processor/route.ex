@@ -49,7 +49,7 @@ defmodule Wayfinder.Processor.Route do
           path: path,
           plug: controller,
           plug_opts: action,
-          helper: alias,
+          helper: original_alias,
           verb: verb
         },
         opts
@@ -61,7 +61,7 @@ defmodule Wayfinder.Processor.Route do
       controller: controller,
       action: action,
       original_action: action,
-      alias: build_alias(action, alias, opts.controller_name_action),
+      alias: build_alias(action, original_alias, opts.controller_name_action),
       line: line,
       file: file,
       methods: normalize_verbs(verb)
@@ -77,20 +77,19 @@ defmodule Wayfinder.Processor.Route do
     end
   end
 
-
   @doc "Generate a JS-safe method name for controller actions"
   @spec js_method(t()) :: String.t()
   def js_method(%__MODULE__{action: action}) do
     Typescript.safe_method_name(to_string(action), "Method")
   end
 
-  defp normalize_verbs(verb) when is_binary(verb) do
+  def normalize_verbs(verb) when is_binary(verb) do
     verb
     |> String.split("|")
     |> Enum.map(&String.downcase/1)
   end
 
-  defp normalize_verbs(verb) when is_atom(verb) do
+  def normalize_verbs(verb) when is_atom(verb) do
     [verb |> Atom.to_string() |> String.downcase()]
   end
 end

@@ -1,3 +1,5 @@
+require Logger
+
 defmodule Wayfinder.Processor.GroupRoutes do
   @moduledoc """
   Groups a list of `%Phoenix.Router.Route{}` entries — all of which belong to the same
@@ -17,26 +19,31 @@ defmodule Wayfinder.Processor.GroupRoutes do
   TODO: Infer the parameters that are not optional because are in all the shared paths
   """
 
+  alias Phoenix.Router.Route, as: PhoenixRoute
   alias Wayfinder.Processor.Route
   alias Wayfinder.Processor.Route
 
   @type variant :: {
           {module(), atom(), String.t()},
-          [Wayfinder.Processor.Route.t()]
+          [PhoenixRoute.t()]
         }
   @type indexed_variant :: {variant(), non_neg_integer()}
 
-  @spec call([Route.t()], Route.phoenix_route_opts()) :: [Route.t()]
+  @spec call([PhoenixRoute.t()], Route.phoenix_route_opts()) :: [Route.t()]
   def call(routes, opts) do
-    group_by_path(routes)
+    Logger.info("Grouped routes: #{inspect(routes, pretty: true)}")
+
+    foo = group_by_path(routes)
     |> order_by_shortest_path()
     |> merge_variants_with_names(opts)
+
+    foo
   end
 
-  @spec group_by_path([Route.t()]) :: %{{module(), atom()} => [variant()]}
+  @spec group_by_path([PhoenixRoute.t()]) :: %{{module(), atom()} => [variant()]}
   defp group_by_path(routes) do
     routes
-    |> Enum.group_by(fn %Route{controller: c, action: a} = r ->
+    |> Enum.group_by(fn %PhoenixRoute{plug: c, plug_opts: a} = r ->
       {c, a, static_path_prefix(r)}
     end)
     |> Enum.group_by(fn {{controller, action, _}, _routes} ->
@@ -56,13 +63,15 @@ defmodule Wayfinder.Processor.GroupRoutes do
 
   @spec merge_variants_with_names([indexed_variant()], Route.phoenix_route_opts()) :: [Wayfinder.Processor.Route.t()]
   defp merge_variants_with_names(indexed_variants, opts) do
-    Enum.map(indexed_variants, fn {{{_controller, action, _prefix}, routes}, index} ->
+    Enum.map(indexed_variants, fn {{{_controller, _action, _prefix}, routes}, _index} ->
       merged_route = merge_route_group(routes, opts)
-      action_name = desambiguate_action_name(merged_route, action, index)
-      %Route{merged_route | action: action_name}
+      # action_name = desambiguate_action_name(merged_route, action, index)
+      # %Route{merged_route | action: action_name}
+      merged_route
     end)
   end
 
+  @spec merge_route_group([PhoenixRoute.t()], Route.phoenix_route_opts()) :: Route.t()
   defp merge_route_group(routes, opts) do
     longest = Enum.max_by(routes, &param_count/1)
 
@@ -77,10 +86,10 @@ defmodule Wayfinder.Processor.GroupRoutes do
         param_count(route) < param_count(longest)
       end)
 
-    ## Longest has to be converted to %Route{} from %Phoenix.Router.Route{}
-    ## Use the `from_phoenix_route/2` function to convert it
+    final_route = Route.from_phoenix_route(longest, opts)
+
     %Route{
-      longest
+      final_route
       | methods: merged_methods,
         all_arguments: extract_path_params(longest.path),
         optional_args: optional_args,
@@ -109,24 +118,29 @@ defmodule Wayfinder.Processor.GroupRoutes do
     end
   end
 
-  defp split_static_segments(%Route{path: path}) do
+  @spec split_static_segments(PhoenixRoute.t()) :: [String.t()]
+  defp split_static_segments(%PhoenixRoute{path: path}) do
     path
     |> String.trim("/")
     |> String.split("/")
     |> Enum.reject(&String.starts_with?(&1, ":"))
   end
 
+  @spec static_path_prefix(PhoenixRoute.t()) :: String.t()
   defp static_path_prefix(route), do: split_static_segments(route) |> Enum.join("/")
+
+  @spec static_segment_count(PhoenixRoute.t()) :: non_neg_integer()
   defp static_segment_count(route), do: split_static_segments(route) |> length()
 
-  defp param_count(%Route{path: path}) do
+  defp param_count(%PhoenixRoute{path: path}) do
     extract_path_params(path) |> length()
   end
 
-  @spec build_param_spec_by_method([Route.t()]) :: %{String.t() => [String.t()]}
+  @spec build_param_spec_by_method([PhoenixRoute.t()]) :: %{String.t() => [String.t()]}
   defp build_param_spec_by_method(group) do
     Enum.reduce(group, %{}, fn route, acc ->
-      Enum.reduce(route.methods, acc, fn method, acc2 ->
+      http_methods = Route.normalize_verbs(route.verb)
+      Enum.reduce(http_methods, acc, fn method, acc2 ->
         method = String.downcase(method)
 
         params = extract_path_params(route.path)
@@ -138,6 +152,7 @@ defmodule Wayfinder.Processor.GroupRoutes do
     end)
   end
 
+  @spec extract_path_params(String.t()) :: [String.t()]
   defp extract_path_params(path) do
     Regex.scan(~r/:([a-zA-Z_]+)/, path)
     |> Enum.map(fn [_, param] -> param end)
