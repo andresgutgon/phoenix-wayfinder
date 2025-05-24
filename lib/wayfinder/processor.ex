@@ -29,8 +29,8 @@ defmodule Wayfinder.Processor do
 
   @spec group_by_controller_and_action([PhoenixRoute.t()]) :: [controller()]
   defp group_by_controller_and_action(all_routes) do
-    Enum.group_by(all_routes, fn phoenix_route ->
-      %{controller: phoenix_route.plug, action: phoenix_route.plug_opts}
+    Enum.group_by(all_routes, fn %{plug: controller, plug_opts: action} ->
+      {controller, action}
     end)
     |> Enum.map(fn {{controller, action}, routes} ->
       controller_parts = get_controller_path_parts(controller)

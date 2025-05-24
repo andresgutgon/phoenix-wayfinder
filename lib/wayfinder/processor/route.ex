@@ -32,7 +32,7 @@ defmodule Wayfinder.Processor.Route do
           controller: module(),
           action: atom(),
           original_action: atom(),
-          alias: String.t() | nil,
+          alias: String.t(),
           line: pos_integer() | nil,
           file: String.t() | nil,
           all_arguments: [String.t()],
@@ -67,6 +67,8 @@ defmodule Wayfinder.Processor.Route do
       methods: normalize_verbs(verb)
     }
   end
+
+  defp build_alias(action, nil, _controller_name_action), do: Atom.to_string(action)
 
   @spec build_alias(atom(), String.t(), String.t()) :: String.t()
   defp build_alias(action, original_alias, controller_name_action) do

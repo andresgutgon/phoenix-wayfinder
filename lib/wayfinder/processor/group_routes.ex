@@ -21,7 +21,6 @@ defmodule Wayfinder.Processor.GroupRoutes do
 
   alias Phoenix.Router.Route, as: PhoenixRoute
   alias Wayfinder.Processor.Route
-  alias Wayfinder.Processor.Route
 
   @type variant :: {
           {module(), atom(), String.t()},
@@ -31,19 +30,15 @@ defmodule Wayfinder.Processor.GroupRoutes do
 
   @spec call([PhoenixRoute.t()], Route.phoenix_route_opts()) :: [Route.t()]
   def call(routes, opts) do
-    Logger.info("Grouped routes: #{inspect(routes, pretty: true)}")
-
-    foo = group_by_path(routes)
+    group_by_path(routes)
     |> order_by_shortest_path()
     |> merge_variants_with_names(opts)
-
-    foo
   end
 
   @spec group_by_path([PhoenixRoute.t()]) :: %{{module(), atom()} => [variant()]}
   defp group_by_path(routes) do
     routes
-    |> Enum.group_by(fn %PhoenixRoute{plug: c, plug_opts: a} = r ->
+    |> Enum.group_by(fn %{plug: c, plug_opts: a} = r ->
       {c, a, static_path_prefix(r)}
     end)
     |> Enum.group_by(fn {{controller, action, _}, _routes} ->
@@ -61,13 +56,14 @@ defmodule Wayfinder.Processor.GroupRoutes do
     |> Enum.with_index()
   end
 
-  @spec merge_variants_with_names([indexed_variant()], Route.phoenix_route_opts()) :: [Wayfinder.Processor.Route.t()]
+  @spec merge_variants_with_names([indexed_variant()], Route.phoenix_route_opts()) :: [
+          Wayfinder.Processor.Route.t()
+        ]
   defp merge_variants_with_names(indexed_variants, opts) do
-    Enum.map(indexed_variants, fn {{{_controller, _action, _prefix}, routes}, _index} ->
+    Enum.map(indexed_variants, fn {{{_controller, action, _prefix}, routes}, index} ->
       merged_route = merge_route_group(routes, opts)
-      # action_name = desambiguate_action_name(merged_route, action, index)
-      # %Route{merged_route | action: action_name}
-      merged_route
+      action_name = desambiguate_action_name(merged_route, action, index)
+      %Route{merged_route | action: action_name}
     end)
   end
 
@@ -77,7 +73,7 @@ defmodule Wayfinder.Processor.GroupRoutes do
 
     merged_methods =
       routes
-      |> Enum.flat_map(& &1.methods)
+      |> Enum.flat_map(fn route -> Route.normalize_verbs(Map.get(route, :verb)) end)
       |> Enum.uniq()
       |> Enum.sort()
 
@@ -97,17 +93,10 @@ defmodule Wayfinder.Processor.GroupRoutes do
     }
   end
 
-  # Probably all I'm doing for not having automatic
-  # Phoenix alias from controller names is due to this code (BUG)
-  # But is fine. I prefer do this refactor because building our route
-  # after grouping and sorting by controller / action and path
-  # is more efficient.
-  # So review this now that we have "opts" from the caller.
+  @spec desambiguate_action_name(Route.t(), atom(), non_neg_integer()) :: atom()
   defp desambiguate_action_name(route, original_action, index) do
     cond do
-      route.alias &&
-        route.alias != Atom.to_string(original_action) &&
-          String.to_atom(route.alias) != original_action ->
+      route.alias != Atom.to_string(original_action) ->
         String.to_atom(route.alias)
 
       index == 0 ->
@@ -119,7 +108,7 @@ defmodule Wayfinder.Processor.GroupRoutes do
   end
 
   @spec split_static_segments(PhoenixRoute.t()) :: [String.t()]
-  defp split_static_segments(%PhoenixRoute{path: path}) do
+  defp split_static_segments(%{path: path}) do
     path
     |> String.trim("/")
     |> String.split("/")
@@ -132,7 +121,7 @@ defmodule Wayfinder.Processor.GroupRoutes do
   @spec static_segment_count(PhoenixRoute.t()) :: non_neg_integer()
   defp static_segment_count(route), do: split_static_segments(route) |> length()
 
-  defp param_count(%PhoenixRoute{path: path}) do
+  defp param_count(%{path: path}) do
     extract_path_params(path) |> length()
   end
 
@@ -140,6 +129,7 @@ defmodule Wayfinder.Processor.GroupRoutes do
   defp build_param_spec_by_method(group) do
     Enum.reduce(group, %{}, fn route, acc ->
       http_methods = Route.normalize_verbs(route.verb)
+
       Enum.reduce(http_methods, acc, fn method, acc2 ->
         method = String.downcase(method)
 
