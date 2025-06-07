@@ -8,7 +8,7 @@ import {
 
 describe('headAction', () => {
   it('url', () => {
-    expect(headAction.url()).toBe('/other-verbs/head')
+    expect(headAction.url().path).toBe('/other-verbs/head')
   })
 
   it('definition', () => {
@@ -21,7 +21,7 @@ describe('headAction', () => {
 
 describe('optionsAction', () => {
   it('url', () => {
-    expect(optionsAction.url()).toBe('/other-verbs/options')
+    expect(optionsAction.url().path).toBe('/other-verbs/options')
   })
 
   it('definition', () => {
@@ -34,7 +34,7 @@ describe('optionsAction', () => {
 
 describe('matchAction', () => {
   it('url', () => {
-    expect(matchAction.url()).toBe('/other-verbs/match')
+    expect(matchAction.url().path).toBe('/other-verbs/match')
   })
 
   it('definition', () => {
@@ -47,8 +47,8 @@ describe('matchAction', () => {
 
 describe('matchWithParams', () => {
   it('url', () => {
-    expect(matchWithParams.url({ id: '123' })).toBe('/other-verbs/match/123')
-    expect(matchWithParams.url('456')).toBe('/other-verbs/match/456')
+    expect(matchWithParams.url({ id: '123' }).path).toBe('/other-verbs/match/123')
+    expect(matchWithParams.url('456').path).toBe('/other-verbs/match/456')
   })
 
   it('definition', () => {
@@ -59,15 +59,15 @@ describe('matchWithParams', () => {
   })
 
   it('parameter handling', () => {
-    expect(matchWithParams.url({ id: 'it-id' })).toBe(
+    expect(matchWithParams.url({ id: 'it-id' }).path).toBe(
       '/other-verbs/match/it-id',
     )
 
-    expect(matchWithParams.url('another-id')).toBe(
+    expect(matchWithParams.url('another-id').path).toBe(
       '/other-verbs/match/another-id',
     )
 
-    expect(matchWithParams.url(789)).toBe('/other-verbs/match/789')
+    expect(matchWithParams.url(789).path).toBe('/other-verbs/match/789')
   })
 
   it('can use post method with a number', () => {

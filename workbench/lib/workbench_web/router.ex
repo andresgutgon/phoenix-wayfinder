@@ -1,7 +1,6 @@
 defmodule WorkbenchWeb.Router do
   use WorkbenchWeb, :router
-  # NOTE: Pass explicit the otp_app only for tests
-  use Wayfinder.PhoenixRouter, otp_app: :workbench
+  use Wayfinder.PhoenixRouter
 
   pipeline :browser do
     plug(:accepts, ["html"])
@@ -53,6 +52,8 @@ defmodule WorkbenchWeb.Router do
     match(:post, "/other-verbs/match/:id", OtherVerbsController, :match_with_params)
 
     resources("/resources", ResourcesController)
+
+    get "/alias", AliasController, :show, as: :my_alias
 
     scope "/backoffice" do
       get("/invisible", IgnoreMeController, :ignore_me)

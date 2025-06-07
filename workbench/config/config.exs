@@ -18,6 +18,7 @@ config :logger, :default_formatter,
   metadata: [:request_id]
 
 config :wayfinder,
+  otp_app: :workbench,
   router: WorkbenchWeb.Router,
   ignore_paths: ["^/backoffice"]
 

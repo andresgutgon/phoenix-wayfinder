@@ -9,6 +9,7 @@ defmodule Wayfinder.Error do
   @type reason ::
           :processor_failure
           | :router_invalid
+          | :otp_app_invalid
           | :route_build_error
           | :tree_build_error
           | :filesystem_error

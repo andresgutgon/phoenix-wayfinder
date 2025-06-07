@@ -66,7 +66,7 @@ defmodule Wayfinder.Typescript.Helpers do
 
     """
     (#{function_args(args, ts_type)}options?: #{function_opts()}): #{definition_type} => ({
-      url: #{action}.url(#{url_args(args, all_args)}options),
+      url: #{action}.url(#{url_args(args, all_args)}options).path,
       method: '#{method}',
     })
     """

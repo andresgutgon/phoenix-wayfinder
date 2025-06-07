@@ -43,8 +43,10 @@ defmodule Wayfinder.FileWriter do
 
     imports = [
       "queryParams",
+      "isCurrentUrl",
       "type RouteQueryOptions",
-      "type RouteDefinition"
+      "type RouteDefinition",
+      "type WayfinderUrl"
     ]
 
     has_optional_param =
@@ -94,19 +96,27 @@ defmodule Wayfinder.FileWriter do
 
   @spec copy_typescript_helper(Options.t()) :: :ok | {:error, Error.t()}
   defp copy_typescript_helper(opts) do
-    target_path = Path.join(opts.app_root, @helper_path)
+    source_dir = Path.join([opts.package_root, @helper_path])
+    target_dir = Path.join(opts.app_root, @helper_path)
 
     try do
-      source_file = Path.join([opts.package_root, @helper_path, "index.ts"])
-      target_file = Path.join(target_path, "index.ts")
+      File.mkdir_p!(target_dir)
 
-      if File.exists?(target_file) and File.read!(source_file) == File.read!(target_file) do
-        :ok
-      else
-        File.mkdir_p!(target_path)
-        File.cp!(source_file, target_file)
-        :ok
-      end
+      Path.wildcard(Path.join(source_dir, "**/*"))
+      |> Enum.reject(&String.ends_with?(&1, ".test.ts"))
+      |> Enum.each(fn source_file ->
+        relative_path = Path.relative_to(source_file, source_dir)
+        target_file = Path.join(target_dir, relative_path)
+
+        if File.dir?(source_file) do
+          File.mkdir_p!(target_file)
+        else
+          File.mkdir_p!(Path.dirname(target_file))
+          File.cp!(source_file, target_file)
+        end
+      end)
+
+      :ok
     rescue
       error ->
         {:error, Error.new("Unexpected error: #{Exception.message(error)}", :filesystem_error)}

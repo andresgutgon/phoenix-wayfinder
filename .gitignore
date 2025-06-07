@@ -26,5 +26,5 @@ wayfinder-*.tar
 /tmp/
 node_modules
 
-test/support/workbench/assets/js/actions
-test/support/workbench/assets/js/wayfinder
+workbench/assets/js/actions
+workbench/assets/js/wayfinder
