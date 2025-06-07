@@ -12,6 +12,8 @@ defmodule Wayfinder.Error do
           | :route_build_error
           | :tree_build_error
           | :filesystem_error
+          | :pattern_invalid
+          | :unknown
 
   @type t :: %__MODULE__{
           message: String.t(),

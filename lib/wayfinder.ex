@@ -1,18 +1,22 @@
-require Logger
-
 defmodule Wayfinder do
   @moduledoc false
-  alias Wayfinder.{Options, Processor}
 
-  @spec generate(module(), Options.t()) :: :ok | {:error, Wayfinder.Error.t()}
+  alias Wayfinder.{Generator, Options, Processor}
 
-  def generate(router, _opts) do
-    case Processor.call(router) do
-      :ok ->
-        :ok
-      {:error, %Wayfinder.Error{message: msg, reason: reason}} ->
-        Logger.error("Wayfinder failed: #{msg} (#{inspect(reason)})")
-        {:error, reason}
+  @spec generate(module(), atom() | nil) :: :ok | {:error, Wayfinder.Error.t()}
+  def generate(router, test_otp_app \\ nil) do
+    case Options.build_opts(router, test_otp_app) do
+      {:ok, %Options{} = opts} ->
+        case Processor.call(router) do
+          {:ok, controllers} ->
+            Generator.call(controllers, opts)
+
+          {:error, error} ->
+            {:error, error}
+        end
+
+      {:error, error} ->
+        {:error, error}
     end
   end
 end

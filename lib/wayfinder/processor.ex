@@ -1,63 +1,73 @@
 defmodule Wayfinder.Processor do
-  require Logger
   @moduledoc false
 
+  alias Phoenix.Router.Route, as: PhoenixRoute
   alias Wayfinder.Error
-  alias Wayfinder.Processor.{Namer, Route}
+  alias Wayfinder.Processor.{GroupRoutes, IgnoreFilter, Route}
 
-  @spec call(module()) :: :ok | :ok | {:error, Error.t()}
-  def call(module) do
-    try do
-      raw_routes = collect(module)
-      _actions = group_by_actions(raw_routes)
-      routes = group_by_named(raw_routes)
+  @type controller :: %{
+          module: module(),
+          controller_parts: [String.t()],
+          routes: [Route.t()]
+        }
 
-
-      Logger.info("Named Routes:\n#{inspect(routes, pretty: true, limit: :infinity)}")
-
-      :ok
-    rescue
-      error ->
-        {:error, Wayfinder.Error.new(Exception.message(error), :processor_failure)}
+  @spec call(module()) :: {:ok, [controller()]} | {:error, Error.t()}
+  def call(router) do
+    with {:ok, ignore_patterns} <- IgnoreFilter.call() do
+      try do
+        {:ok,
+         router
+         |> Phoenix.Router.routes()
+         |> Enum.filter(&valid_wayfinder_route?/1)
+         |> Enum.reject(&IgnoreFilter.ignore?(&1, ignore_patterns))
+         |> group_by_controller()}
+      rescue
+        error ->
+          {:error, Error.new(Exception.message(error), :processor_failure)}
+      end
     end
   end
 
-  @spec group_by_actions([Route.t()]) :: %{[String.t()] => [Route.t()]}
-  defp group_by_actions(routes) do
-    Enum.group_by(routes, fn route ->
-      Namer.module_to_parts(route.controller)
+  @spec group_by_controller([PhoenixRoute.t()]) :: [controller()]
+  defp group_by_controller(all_routes) do
+    Enum.group_by(all_routes, fn %{plug: controller} ->
+      {controller}
+    end)
+    |> Enum.map(fn {{controller}, routes} ->
+      controller_parts = get_controller_path_parts(controller)
+      controller_name_action = build_controller_name_action(controller_parts)
+
+      %{
+        module: controller,
+        controller_parts: controller_parts,
+        routes:
+          GroupRoutes.call(routes, %{
+            controller_parts: controller_parts,
+            controller_name_action: controller_name_action
+          })
+      }
     end)
   end
 
-  @spec group_by_named([Route.t()]) :: %{String.t() => [Route.t()]}
-  defp group_by_named(routes) do
-    routes
-    |> Enum.filter(&user_defined_name?/1)
-    |> Enum.group_by(&build_full_named/1)
+  @spec build_controller_name_action([String.t()]) :: String.t()
+  defp build_controller_name_action(controller_parts) do
+    # Ex.: MyHomeController -> my_home
+    List.last(controller_parts)
+    |> String.replace_suffix("Controller", "")
+    |> String.replace(~r/([a-z0-9])([A-Z])/, "\\1_\\2")
+    |> String.downcase()
   end
 
-  defp build_full_named(route) do
-    "#{route.name}_#{route.action}"
+  @spec get_controller_path_parts(module()) :: [String.t()]
+  def get_controller_path_parts(controller) do
+    controller
+    |> Atom.to_string()
+    |> String.replace_prefix("Elixir.", "")
+    |> String.split(".")
+    |> drop_app_namespace()
   end
 
-  defp user_defined_name?(%Route{controller: controller, name: name}) do
-    inferred_name =
-      controller
-      |> Module.split()
-      |> List.last()
-      |> String.trim_trailing("Controller")
-      |> Macro.underscore()
-
-    name != inferred_name
-  end
-
-  @spec collect(module()) :: [Route.t()]
-  defp collect(router) do
-    router
-    |> Phoenix.Router.routes()
-    |> Enum.filter(&valid_wayfinder_route?/1)
-    |> Enum.map(&Route.from_phoenix_route/1)
-  end
+  defp drop_app_namespace([_app | rest]), do: rest
 
   # Possible to have routes without controller. Skip them.
   defp valid_wayfinder_route?(%{plug: controller}) when is_atom(controller), do: true
