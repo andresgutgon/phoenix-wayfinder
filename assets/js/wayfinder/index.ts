@@ -66,7 +66,6 @@ export const queryParams = (options?: RouteQueryOptions): string => {
   return str.length > 0 ? `?${str}` : ''
 }
 
-// TODO: Add tests for this
 export const validateParameters = (
   args: Record<string, unknown> | undefined,
   optional: string[],

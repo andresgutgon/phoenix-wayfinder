@@ -115,6 +115,11 @@ describe('ResourcesController RESTful routes', () => {
       expect(edit.get({ id: '123' }).url).toBe('/resources/123/edit')
       expect(edit.get('456').url).toBe('/resources/456/edit')
     })
+
+    it.only('throws an error when not passing the id', () => {
+      // @ts-expect-error - Testing error handling
+      expect(() => edit.url().path).toThrow()
+    })
   })
 
   describe('update', () => {
