@@ -5,9 +5,10 @@ const WAYFINDER_ROOT = path.join(__dirname, '..', '..', '..')
 
 export async function setup(): Promise<void> {
   try {
-    execSync('mix wayfinder.gen.routes', {
+    execSync('mix wayfinder.generate_tests', {
       cwd: WAYFINDER_ROOT,
       stdio: 'inherit',
+      env: { ...process.env, MIX_ENV: 'test' }
     })
   } catch (error) {
     process.exit(1)

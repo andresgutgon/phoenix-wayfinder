@@ -1,5 +1,7 @@
 # Wayfinder
 
+TODO: Redo this readme
+
 This is a port from Laravel package of the same name [wayfinder](https://github.com/laravel/wayfinder).
 
 Wayfinder bridges your Phoenix backend and TypeScript frontend with zero friction. It automatically generates fully-typed, importable TypeScript functions for your controllers and routes — so you can call your Phoenix endpoints directly in your client code just like any other function. No more hardcoding URLs, guessing route parameters, or syncing backend changes manually.

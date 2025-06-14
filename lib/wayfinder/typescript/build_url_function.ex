@@ -4,6 +4,19 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
   alias Wayfinder.Typescript.{BuildActions, Helpers}
   alias Wayfinder.Processor.Route
 
+  @url_return """
+    const path = routePath + queryParams(options);
+
+    return {
+      path,
+      isCurrent: isCurrentUrl({
+        routePath,
+        currentPath: options?.currentPath,
+        matchExact: options?.matchExact
+      })
+    }
+  """
+
   @spec build(BuildActions.opts()) :: String.t()
   def build(opts) do
     all_args = opts.all_arguments
@@ -25,11 +38,13 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
       end
 
     """
-    #{safe_name}.url = (#{args} options?: #{func_opts}): string => {
+    #{safe_name}.url = (#{args} options?: #{func_opts}): WayfinderUrl => {
+      let routePath = #{safe_name}.definition.url
+
       #{arguments_helpers}
-      const baseUrl = #{build_url_with_replacements(safe_name, all_args)}
-      const cleanUrl = baseUrl.replace(/\\/+$/, '') || '/'
-      return cleanUrl + queryParams(options)
+      routePath = #{build_url_with_replacements(safe_name, all_args)}
+      routePath = routePath.replace(/\\/+$/, '') || '/'
+      #{@url_return}
     }
     """
   end
@@ -81,7 +96,8 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
       if (args == null) {
         let basePath = #{template_ref};
         #{Enum.map_join(Enum.reverse(args), "\n", fn param -> "basePath = basePath.replace(/\\/:#{param.name}(\\?)?$/, '');" end)}
-        return basePath || '/';
+        routePath = basePath || '/'
+        #{@url_return}
       }
       """
     else
@@ -94,7 +110,9 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
         """
       else
         """
-        if (args == null) return #{safe_name}.definition.url;
+        if (args == null) {
+          #{@url_return}
+        }
         """
       end
     end

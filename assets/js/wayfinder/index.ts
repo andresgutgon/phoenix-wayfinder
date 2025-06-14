@@ -1,24 +1,4 @@
-type Method = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head'
-
-export type RouteDefinition<TMethod extends Method | Method[]> = {
-  url: string
-} & (TMethod extends Method[] ? { methods: TMethod } : { method: TMethod })
-
-export type RouteQueryOptions = {
-  query?: QueryParams
-  mergeQuery?: QueryParams
-}
-
-export type QueryParams = Record<
-  string,
-  | string
-  | number
-  | boolean
-  | string[]
-  | null
-  | undefined
-  | Record<string, string | number | boolean>
->
+import type { RouteQueryOptions } from './types'
 
 function getValue(value: string | number | boolean): string {
   if (value === true) return '1'
@@ -102,3 +82,6 @@ export const validateParameters = (
     }
   }
 }
+
+export * from './isCurrentUrl'
+export * from './types'

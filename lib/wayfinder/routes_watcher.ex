@@ -32,6 +32,9 @@ defmodule Wayfinder.RoutesWatcher do
 
   ## Options
 
+  * `:generator_module` - Module to use for route generation (defaults to Wayfinder)
+  * `:compiler_fun` - Function to call when compiling router files (optional)
+
   Accepts GenServer options. The process will be registered under the module name.
   """
   def start_link(opts \\ []) do
@@ -41,10 +44,17 @@ defmodule Wayfinder.RoutesWatcher do
   @doc """
   Initializes the watcher by starting a FileSystem process and subscribing to events.
   """
-  def init(_opts) do
+  def init(opts) do
     {:ok, watcher_pid} = FileSystem.start_link(dirs: [File.cwd!()])
     FileSystem.subscribe(watcher_pid)
-    {:ok, %{watcher_pid: watcher_pid}}
+
+    state = %{
+      watcher_pid: watcher_pid,
+      generator_module: Keyword.get(opts, :generator_module, Wayfinder),
+      compiler_fun: Keyword.get(opts, :compiler_fun)
+    }
+
+    {:ok, state}
   end
 
   @doc """
@@ -52,8 +62,19 @@ defmodule Wayfinder.RoutesWatcher do
   """
   def handle_info({:file_event, _watcher_pid, {path, events}}, state) when is_list(events) do
     if router_file_modified?(path, events) do
-      Logger.info("Router file changed: #{path}")
-      regenerate_routes(path)
+      case compile_router(path, state.compiler_fun) do
+        :ok ->
+          router = Application.get_env(:wayfinder, :router)
+          otp_app = Application.get_env(:wayfinder, :otp_app)
+
+          case state.generator_module.generate(router, otp_app) do
+            :ok -> Logger.info("[wayfinder] routes re-generated")
+            {:error, reason} -> Logger.error("[wayfinder-error]: #{inspect(reason)}")
+          end
+
+        {:error, error} ->
+          Logger.error("Router compilation failed: #{inspect(error)}")
+      end
     end
 
     {:noreply, state}
@@ -71,23 +92,13 @@ defmodule Wayfinder.RoutesWatcher do
     Path.basename(path) == "router.ex" and Enum.any?(events, &(&1 == :modified))
   end
 
-  defp regenerate_routes(router_path) do
+  def compile_router(router_path, compiler_fun) when is_function(compiler_fun, 1) do
     try do
-      router = get_router_module()
-      Code.compile_file(router_path)
-
-      case Wayfinder.generate(router) do
-        :ok -> Logger.info("JS routes regenerated")
-        {:error, reason} -> Logger.error("JS routes re-generation failed: #{inspect(reason)}")
-      end
+      compiler_fun.(router_path)
+      :ok
     rescue
       e ->
-        Logger.error("Failed to regenerate routes: #{inspect(e)}")
+        {:error, e}
     end
-  end
-
-  defp get_router_module do
-    Application.get_env(:wayfinder, :router) ||
-      raise "No router module configured. Please add config :wayfinder, router: YourAppWeb.Router"
   end
 end

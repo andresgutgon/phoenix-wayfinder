@@ -12,7 +12,7 @@ import ResourceController, {
 describe('ResourcesController RESTful routes', () => {
   describe('index', () => {
     it('generates correct URL for listing all resources', () => {
-      expect(index.url()).toBe('/resources')
+      expect(index.url().path).toBe('/resources')
       expect(index().url).toBe('/resources')
     })
 
@@ -31,8 +31,8 @@ describe('ResourcesController RESTful routes', () => {
 
   describe('show', () => {
     it('generates correct URL for showing a specific resource', () => {
-      expect(show.url({ id: '123' })).toBe('/resources/123')
-      expect(show.url('456')).toBe('/resources/456')
+      expect(show.url({ id: '123' }).path).toBe('/resources/123')
+      expect(show.url('456').path).toBe('/resources/456')
       expect(show({ id: '789' }).url).toBe('/resources/789')
       expect(show('abc').url).toBe('/resources/abc')
     })
@@ -49,11 +49,17 @@ describe('ResourcesController RESTful routes', () => {
       expect(show.get({ id: '123' }).url).toBe('/resources/123')
       expect(show.get('456').url).toBe('/resources/456')
     })
+
+    it('is current url', () => {
+      expect(
+        show.url({ id: '123' }, { currentPath: '/resources/123' }).isCurrent,
+      ).toBe(true)
+    })
   })
 
   describe('new', () => {
     it('generates correct URL for new resource form', () => {
-      expect(newMethod.url()).toBe('/resources/new')
+      expect(newMethod.url().path).toBe('/resources/new')
       expect(newMethod().url).toBe('/resources/new')
     })
 
@@ -72,7 +78,7 @@ describe('ResourcesController RESTful routes', () => {
 
   describe('create', () => {
     it('generates correct URL for creating a resource', () => {
-      expect(create.url()).toBe('/resources')
+      expect(create.url().path).toBe('/resources')
       expect(create().url).toBe('/resources')
     })
 
@@ -91,8 +97,8 @@ describe('ResourcesController RESTful routes', () => {
 
   describe('edit', () => {
     it('generates correct URL for editing a specific resource', () => {
-      expect(edit.url({ id: '123' })).toBe('/resources/123/edit')
-      expect(edit.url('456')).toBe('/resources/456/edit')
+      expect(edit.url({ id: '123' }).path).toBe('/resources/123/edit')
+      expect(edit.url('456').path).toBe('/resources/456/edit')
       expect(edit({ id: '789' }).url).toBe('/resources/789/edit')
       expect(edit('abc').url).toBe('/resources/abc/edit')
     })
@@ -113,8 +119,8 @@ describe('ResourcesController RESTful routes', () => {
 
   describe('update', () => {
     it('generates correct URL for updating a specific resource', () => {
-      expect(update.url({ id: '123' })).toBe('/resources/123')
-      expect(update.url('456')).toBe('/resources/456')
+      expect(update.url({ id: '123' }).path).toBe('/resources/123')
+      expect(update.url('456').path).toBe('/resources/456')
       expect(update({ id: '789' }).url).toBe('/resources/789')
       expect(update('abc').url).toBe('/resources/abc')
     })
@@ -141,8 +147,8 @@ describe('ResourcesController RESTful routes', () => {
 
   describe('delete', () => {
     it('generates correct URL for deleting a specific resource', () => {
-      expect(deleteMethod.url({ id: '123' })).toBe('/resources/123')
-      expect(deleteMethod.url('456')).toBe('/resources/456')
+      expect(deleteMethod.url({ id: '123' }).path).toBe('/resources/123')
+      expect(deleteMethod.url('456').path).toBe('/resources/456')
       expect(deleteMethod({ id: '789' }).url).toBe('/resources/789')
       expect(deleteMethod('abc').url).toBe('/resources/abc')
     })
@@ -166,10 +172,10 @@ describe('ResourcesController RESTful routes', () => {
       const resourceActions = [show, edit, update, deleteMethod]
 
       resourceActions.forEach((action) => {
-        expect(action.url({ id: 'test-id' })).toContain('test-id')
-        expect(action.url('string-id')).toContain('string-id')
-        expect(action.url(123)).toContain('123')
-        expect(action.url(['array-id'])).toContain('array-id')
+        expect(action.url({ id: 'test-id' }).path).toContain('test-id')
+        expect(action.url('string-id').path).toContain('string-id')
+        expect(action.url(123).path).toContain('123')
+        expect(action.url(['array-id']).path).toContain('array-id')
       })
     })
   })
