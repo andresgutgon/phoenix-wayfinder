@@ -89,32 +89,66 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
 
   @spec build_param_parsing([Route.param_spec()], String.t()) :: String.t()
   defp build_param_parsing(args, safe_name) do
-    if Enum.all?(args, & &1.optional) do
-      template_ref = "#{safe_name}.definition.url"
+    required_params = Enum.filter(args, &(!&1.optional))
 
-      """
-      if (args == null) {
-        let basePath = #{template_ref};
-        #{Enum.map_join(Enum.reverse(args), "\n", fn param -> "basePath = basePath.replace(/\\/:#{param.name}(\\?)?$/, '');" end)}
-        routePath = basePath || '/'
-        #{@url_return}
-      }
-      """
-    else
-      if length(args) == 1 do
+    cond do
+      # All parameters are optional
+      Enum.all?(args, & &1.optional) ->
+        template_ref = "#{safe_name}.definition.url"
+
         """
-        if (args == null) return #{safe_name}.definition.url;
-        if (typeof args === 'string' || typeof args === 'number') {
-          args = { #{hd(args).name}: args }
+        if (args == null) {
+          let basePath = #{template_ref};
+          #{Enum.map_join(Enum.reverse(args), "\n", fn param -> "basePath = basePath.replace(/\\/:#{param.name}(\\?)?$/, '');" end)}
+          routePath = basePath || '/'
+          #{@url_return}
         }
         """
-      else
+
+      # Single parameter
+      length(args) == 1 ->
+        param = hd(args)
+
+        if param.optional do
+          """
+          if (args == null) {
+            let basePath = #{safe_name}.definition.url;
+            basePath = basePath.replace(/\\/:#{param.name}(\\?)?$/, '');
+            routePath = basePath || '/'
+            #{@url_return}
+          }
+          if (typeof args === 'string' || typeof args === 'number') {
+            args = { #{param.name}: args }
+          }
+          """
+        else
+          """
+          if (args == null) {
+            throw new Error('Missing required parameter: #{param.name}')
+          }
+          if (typeof args === 'string' || typeof args === 'number') {
+            args = { #{param.name}: args }
+          }
+          """
+        end
+
+      # Multiple parameters with at least one required
+      length(required_params) > 0 ->
+        required_param_names = Enum.map_join(required_params, ", ", &"#{&1.name}")
+
+        """
+        if (args == null) {
+          throw new Error(`Missing required parameters: #{required_param_names}`)
+        }
+        """
+
+      # Multiple parameters, all optional (shouldn't reach here due to first condition, but for safety)
+      true ->
         """
         if (args == null) {
           #{@url_return}
         }
         """
-      end
     end
   end
 
@@ -153,18 +187,46 @@ defmodule Wayfinder.Typescript.BuildUrlFunction do
 
   @spec build_validate_check([Route.param_spec()]) :: String.t()
   defp build_validate_check(args) do
+    required_params = Enum.filter(args, &(!&1.optional))
     optional_params = Enum.filter(args, & &1.optional)
 
-    if optional_params != [] do
-      names =
-        optional_params
-        |> Enum.map(&~s|"#{&1.name}"|)
-        |> Enum.join(", ")
+    validation_parts = []
 
-      "validateParameters(args, [#{names}])"
-    else
-      ""
-    end
+    # Validate required parameters
+    validation_parts =
+      if required_params != [] do
+        required_names =
+          required_params
+          |> Enum.map(&~s|"#{&1.name}"|)
+          |> Enum.join(", ")
+
+        required_validation = """
+        const missingRequired = [#{required_names}].filter(param => args[param] == null);
+        if (missingRequired.length > 0) {
+          throw new Error(`Missing required parameters: ${missingRequired.join(', ')}`);
+        }
+        """
+
+        [required_validation | validation_parts]
+      else
+        validation_parts
+      end
+
+    # Validate optional parameters using existing validateParameters function
+    validation_parts =
+      if optional_params != [] do
+        optional_names =
+          optional_params
+          |> Enum.map(&~s|"#{&1.name}"|)
+          |> Enum.join(", ")
+
+        optional_validation = "validateParameters(args, [#{optional_names}])"
+        [optional_validation | validation_parts]
+      else
+        validation_parts
+      end
+
+    Enum.reverse(validation_parts) |> Enum.join("\n      ")
   end
 
   @spec build_parsed_args([Route.param_spec()], boolean()) :: String.t()
