@@ -14,6 +14,7 @@ describe('headAction', () => {
   it('definition', () => {
     expect(headAction.definition).toEqual({
       url: '/other-verbs/head',
+      parameters: {},
       methods: ['head'],
     })
   })
@@ -27,6 +28,7 @@ describe('optionsAction', () => {
   it('definition', () => {
     expect(optionsAction.definition).toEqual({
       url: '/other-verbs/options',
+      parameters: {},
       methods: ['options'],
     })
   })
@@ -40,6 +42,7 @@ describe('matchAction', () => {
   it('definition', () => {
     expect(matchAction.definition).toEqual({
       url: '/other-verbs/match',
+      parameters: {},
       methods: ['get', 'patch', 'post', 'put'],
     })
   })
@@ -47,13 +50,18 @@ describe('matchAction', () => {
 
 describe('matchWithParams', () => {
   it('url', () => {
-    expect(matchWithParams.url({ id: '123' }).path).toBe('/other-verbs/match/123')
+    expect(matchWithParams.url({ id: '123' }).path).toBe(
+      '/other-verbs/match/123',
+    )
     expect(matchWithParams.url('456').path).toBe('/other-verbs/match/456')
   })
 
   it('definition', () => {
     expect(matchWithParams.definition).toEqual({
       url: '/other-verbs/match/:id',
+      parameters: {
+        id: { name: 'id', required: true, optional: false, glob: false },
+      },
       methods: ['get', 'post'],
     })
   })
@@ -83,14 +91,10 @@ describe('matchWithParams', () => {
   })
 
   it('can use post method with an object string ', () => {
-    expect(matchWithParams.post({ id: '20' }).url).toBe(
-      '/other-verbs/match/20',
-    )
+    expect(matchWithParams.post({ id: '20' }).url).toBe('/other-verbs/match/20')
   })
 
   it('can use post method with an object number ', () => {
-    expect(matchWithParams.post({ id: 20 }).url).toBe(
-      '/other-verbs/match/20',
-    )
+    expect(matchWithParams.post({ id: 20 }).url).toBe('/other-verbs/match/20')
   })
 })

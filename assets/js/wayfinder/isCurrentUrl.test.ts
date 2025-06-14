@@ -16,7 +16,7 @@ describe('isCurrentUrl', () => {
       isCurrentUrl({
         routePath: '/',
         currentPath: '/venues/1',
-        matchExact: true,
+        exactMatch: true,
       }),
     ).toBe(false)
   })
@@ -75,7 +75,6 @@ describe('isCurrentUrl', () => {
 
   it('falls back to window.location.pathname if currentPath is not provided', () => {
     const originalWindow = global.window
-    // @ts-ignore
     global.window = Object.create(window)
     Object.defineProperty(global.window, 'location', {
       value: { pathname: '/venues/1' },
@@ -93,8 +92,8 @@ describe('isCurrentUrl', () => {
 
   it('returns false if no currentPath and no window object', () => {
     const originalWindow = global.window
-    // @ts-ignore
-    delete global.window
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (global as any).window
 
     expect(
       isCurrentUrl({

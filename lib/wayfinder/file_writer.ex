@@ -38,28 +38,16 @@ defmodule Wayfinder.FileWriter do
   end
 
   @spec build_pathfinder_imports(Processor.controller(), String.t(), Options.t()) :: String.t()
-  defp build_pathfinder_imports(controller, controller_path, opts) do
+  defp build_pathfinder_imports(_controller, controller_path, opts) do
     import_path = build_import_path(controller_path, opts)
 
     imports = [
-      "queryParams",
-      "isCurrentUrl",
+      "buildUrl",
       "type RouteQueryOptions",
       "type RouteDefinition",
+      "type RouteDefinitionWithParameters",
       "type WayfinderUrl"
     ]
-
-    has_optional_param =
-      controller.routes
-      |> Enum.flat_map(& &1.all_params)
-      |> Enum.any?(fn %{optional: opt} -> opt end)
-
-    imports =
-      if has_optional_param do
-        ["validateParameters" | imports]
-      else
-        imports
-      end
 
     "import { #{Enum.join(imports, ", ")} } from '#{import_path}'"
   end

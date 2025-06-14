@@ -6,12 +6,15 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "types": ["vite", "vitest/globals"],
-    "baseUrl": "."
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "types": ["vitest/globals", "node"]
   },
   "include": [
-    "vite.config.ts",
+    "assets/js/**/*",
     "test/js/tests/**/*",
+    "**/*.test.ts",
     "tests/js/support/build.ts"
-  ]
+  ],
+  "exclude": ["node_modules"]
 }

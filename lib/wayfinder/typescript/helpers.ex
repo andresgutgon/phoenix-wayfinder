@@ -112,15 +112,19 @@ defmodule Wayfinder.Typescript.Helpers do
     end
   end
 
-  @spec build_route_definition_type(String.t()) :: String.t()
-  def build_route_definition_type(method) when is_binary(method) do
-    "RouteDefinition<'#{method}'>"
+  @spec build_route_definition_type(String.t() | [String.t()]) :: String.t()
+  @spec build_route_definition_type(String.t() | [String.t()], boolean()) :: String.t()
+  def build_route_definition_type(methods, with_params \\ false)
+
+  def build_route_definition_type(method, with_params) when is_binary(method) do
+    base = if with_params, do: "RouteDefinitionWithParameters", else: "RouteDefinition"
+    "#{base}<'#{method}'>"
   end
 
-  @spec build_route_definition_type([String.t()]) :: String.t()
-  def build_route_definition_type(methods) when is_list(methods) do
+  def build_route_definition_type(methods, with_params) when is_list(methods) do
     method_types = methods |> Enum.map(&"'#{&1}'") |> Enum.join(", ")
-    "RouteDefinition<[#{method_types}]>"
+    base = if with_params, do: "RouteDefinitionWithParameters", else: "RouteDefinition"
+    "#{base}<[#{method_types}]>"
   end
 
   @spec url_args([Route.param_spec()], [Route.param_spec()]) :: String.t()

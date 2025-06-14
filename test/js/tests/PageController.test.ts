@@ -13,7 +13,7 @@ it('match exact url', () => {
   expect(
     home.url({
       currentPath: '/events',
-      matchExact: true,
+      exactMatch: true,
     }).isCurrent,
   ).toBe(false)
 })
