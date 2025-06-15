@@ -19,6 +19,7 @@ describe('ResourcesController RESTful routes', () => {
     it('has correct definition', () => {
       expect(index.definition).toEqual({
         url: '/resources',
+        parameters: {},
         methods: ['get'],
       })
     })
@@ -40,6 +41,9 @@ describe('ResourcesController RESTful routes', () => {
     it('has correct definition', () => {
       expect(show.definition).toEqual({
         url: '/resources/:id',
+        parameters: {
+          id: { name: 'id', required: true, optional: false, glob: false },
+        },
         methods: ['get'],
       })
     })
@@ -66,6 +70,7 @@ describe('ResourcesController RESTful routes', () => {
     it('has correct definition', () => {
       expect(newMethod.definition).toEqual({
         url: '/resources/new',
+        parameters: {},
         methods: ['get'],
       })
     })
@@ -85,6 +90,7 @@ describe('ResourcesController RESTful routes', () => {
     it('has correct definition', () => {
       expect(create.definition).toEqual({
         url: '/resources',
+        parameters: {},
         methods: ['post'],
       })
     })
@@ -106,6 +112,9 @@ describe('ResourcesController RESTful routes', () => {
     it('has correct definition', () => {
       expect(edit.definition).toEqual({
         url: '/resources/:id/edit',
+        parameters: {
+          id: { name: 'id', required: true, optional: false, glob: false },
+        },
         methods: ['get'],
       })
     })
@@ -114,6 +123,11 @@ describe('ResourcesController RESTful routes', () => {
       expect(edit.get({ id: '123' }).method).toBe('get')
       expect(edit.get({ id: '123' }).url).toBe('/resources/123/edit')
       expect(edit.get('456').url).toBe('/resources/456/edit')
+    })
+
+    it('throws an error when not passing the id', () => {
+      // @ts-expect-error - Testing error handling
+      expect(() => edit.url().path).toThrow()
     })
   })
 
@@ -128,6 +142,9 @@ describe('ResourcesController RESTful routes', () => {
     it('has correct definition', () => {
       expect(update.definition).toEqual({
         methods: ['patch', 'put'],
+        parameters: {
+          id: { name: 'id', required: true, optional: false, glob: false },
+        },
         url: '/resources/:id',
       })
     })
@@ -156,6 +173,9 @@ describe('ResourcesController RESTful routes', () => {
     it('has correct definition', () => {
       expect(deleteMethod.definition).toEqual({
         url: '/resources/:id',
+        parameters: {
+          id: { name: 'id', required: true, optional: false, glob: false },
+        },
         methods: ['delete'],
       })
     })

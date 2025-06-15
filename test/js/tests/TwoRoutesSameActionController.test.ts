@@ -17,6 +17,7 @@ describe('TwoRoutesSameActionController', () => {
     it('has correct definition with RouteDefinition type', () => {
       expect(same.definition).toEqual({
         methods: ['get'],
+        parameters: {},
         url: '/two-routes-one-action-1',
       })
     })
@@ -50,6 +51,7 @@ describe('TwoRoutesSameActionController', () => {
     it('has correct definition with RouteDefinition type', () => {
       expect(same2.definition).toEqual({
         methods: ['get'],
+        parameters: {},
         url: '/two-routes-one-action-2',
       })
     })
@@ -93,6 +95,7 @@ describe('TwoRoutesSameActionController', () => {
     it("definitions satisfy RouteDefinition<['get']>", () => {
       expect(Array.isArray(same.definition.methods)).toBe(true)
       expect(Array.isArray(same2.definition.methods)).toBe(true)
+      expect(same.definition.parameters).toEqual({})
       expect(same.definition.methods).toContain('get')
       expect(same2.definition.methods).toContain('get')
     })

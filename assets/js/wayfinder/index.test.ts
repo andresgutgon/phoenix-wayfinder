@@ -68,10 +68,7 @@ describe('queryParams', () => {
         },
       })
 
-      expectQuery(
-        result,
-        '?existing=1&foo[]=x&foo[]=y&bar=z',
-      )
+      expectQuery(result, '?existing=1&foo[]=x&foo[]=y&bar=z')
     })
 
     it('handles nested object params', () => {
@@ -110,10 +107,7 @@ describe('queryParams', () => {
         },
       })
 
-      expectQuery(
-        result,
-        '?existing=1&foo[]=a&nested[one]=1&nested[two]=2',
-      )
+      expectQuery(result, '?existing=1&foo[]=a&nested[one]=1&nested[two]=2')
     })
   })
 

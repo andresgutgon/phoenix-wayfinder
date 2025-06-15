@@ -66,22 +66,6 @@ export const queryParams = (options?: RouteQueryOptions): string => {
   return str.length > 0 ? `?${str}` : ''
 }
 
-// TODO: Add tests for this
-export const validateParameters = (
-  args: Record<string, unknown> | undefined,
-  optional: string[],
-) => {
-  const missing = optional.filter((key) => !args?.[key])
-  const expectedMissing = optional.slice(missing.length * -1)
-
-  for (let i = 0; i < missing.length; i++) {
-    if (missing[i] !== expectedMissing[i]) {
-      throw Error(
-        'Unexpected optional parameters missing. Unable to generate a URL.',
-      )
-    }
-  }
-}
-
-export * from './isCurrentUrl'
 export * from './types'
+export * from './isCurrentUrl'
+export * from './buildUrl'

@@ -10,7 +10,7 @@ export async function setup(): Promise<void> {
       stdio: 'inherit',
       env: { ...process.env, MIX_ENV: 'test' }
     })
-  } catch (error) {
+  } catch {
     process.exit(1)
   }
 }
