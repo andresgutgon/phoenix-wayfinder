@@ -51,7 +51,10 @@ defmodule Wayfinder.RoutesWatcher do
     state = %{
       watcher_pid: watcher_pid,
       generator_module: Keyword.get(opts, :generator_module, Wayfinder),
-      compiler_fun: Keyword.get(opts, :compiler_fun)
+      compiler_fun:
+        Keyword.get(opts, :compiler_fun, fn router_path ->
+          Code.compile_file(router_path)
+        end)
     }
 
     {:ok, state}
