@@ -12,15 +12,15 @@ defmodule Wayfinder.Typescript.BuildActions do
   all the methods that this action can handle according to the router.
   """
 
-  alias Wayfinder.Processor.Route
   alias Wayfinder.Processor
+  alias Wayfinder.Processor.Route
 
   alias Wayfinder.Typescript.{
-    DocBlock,
-    BuildParams,
     BuildAction,
     BuildHttpMethods,
-    BuildUrlFunction
+    BuildParams,
+    BuildUrlFunction,
+    DocBlock
   }
 
   @type opts :: %{
@@ -37,21 +37,16 @@ defmodule Wayfinder.Typescript.BuildActions do
 
   @spec call(Processor.controller()) :: String.t()
   def call(controller) do
-    Enum.join(
-      Enum.map(controller.routes, fn route ->
-        opts = build_opts(route)
+    controller.routes
+    |> Enum.flat_map(fn route ->
+      opts = build_opts(route)
 
-        Enum.flat_map(
-          [
-            [BuildAction.build(opts)],
-            [BuildUrlFunction.build(opts)],
-            BuildHttpMethods.build(opts)
-          ],
-          & &1
-        )
-      end),
-      "\n\n"
-    )
+      [
+        BuildAction.build(opts),
+        BuildUrlFunction.build(opts)
+      ] ++ BuildHttpMethods.build(opts)
+    end)
+    |> Enum.join("\n\n")
   end
 
   @spec build_opts(Route.t()) :: opts()

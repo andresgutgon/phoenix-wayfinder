@@ -2,7 +2,6 @@
 defmodule TestRouter do
   use Phoenix.Router
 
-
   @moduledoc """
   A simple test router for RoutesWatcher tests.
   This module exists solely to provide a valid router module for testing

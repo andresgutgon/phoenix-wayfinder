@@ -37,15 +37,9 @@ defmodule Wayfinder.Typescript.BuildAction do
 
   defp build_parameters_definition(params) do
     param_entries =
-      params
-      |> Enum.map(fn param ->
-        optional_str = if param.optional, do: "true", else: "false"
-        required_str = if param.optional, do: "false", else: "true"
-        glob_str = if param.glob, do: "true", else: "false"
-
-        "#{param.name}: { name: \"#{param.name}\", optional: #{optional_str}, required: #{required_str}, glob: #{glob_str} }"
+      Enum.map_join(params, ", ", fn param ->
+        "#{param.name}: { name: \"#{param.name}\", optional: #{param.optional || false}, required: #{!param.optional}, glob: #{param.glob || false} }"
       end)
-      |> Enum.join(", ")
 
     "{ #{param_entries} }"
   end

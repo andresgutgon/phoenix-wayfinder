@@ -31,11 +31,11 @@ defmodule Wayfinder.Typescript.BuildController do
       controller.routes
       |> Enum.map(fn route ->
         action = Typescript.camelize_name(route.action)
-        implementedFunction = Route.js_method(route)
+        implemented_function = Route.js_method(route)
 
-        case action == implementedFunction do
+        case action == implemented_function do
           true -> action
-          false -> "#{action}: #{implementedFunction}"
+          false -> "#{action}: #{implemented_function}"
         end
       end)
       |> Enum.uniq()
