@@ -1,8 +1,8 @@
 defmodule Wayfinder.Typescript.Helpers do
   @moduledoc false
 
-  alias Wayfinder.Typescript.BuildParams
   alias Wayfinder.Processor.Route
+  alias Wayfinder.Typescript.BuildParams
 
   @reserved_keywords ~w(
     break case catch class const continue debugger default delete do else
@@ -72,7 +72,7 @@ defmodule Wayfinder.Typescript.Helpers do
     """
   end
 
-  def function_opts(), do: "RouteQueryOptions"
+  def function_opts, do: "RouteQueryOptions"
 
   def function_args([], _), do: ""
 
@@ -92,13 +92,11 @@ defmodule Wayfinder.Typescript.Helpers do
       # Multiple params, one or more is a glob: only object form
       glob_param ->
         object =
-          args
-          |> Enum.map(fn
+          Enum.map_join(args, ", ", fn
             %{glob: true, name: n} -> "#{n}: (#{ts_type_str})[]"
             %{optional: true, name: n} -> "#{n}?: #{ts_type_str}"
             %{name: n} -> "#{n}: #{ts_type_str}"
           end)
-          |> Enum.join(", ")
 
         "args: { #{object} }, "
 
@@ -122,7 +120,7 @@ defmodule Wayfinder.Typescript.Helpers do
   end
 
   def build_route_definition_type(methods, with_params) when is_list(methods) do
-    method_types = methods |> Enum.map(&"'#{&1}'") |> Enum.join(", ")
+    method_types = Enum.map_join(methods, ", ", &"'#{&1}'")
     base = if with_params, do: "RouteDefinitionWithParameters", else: "RouteDefinition"
     "#{base}<[#{method_types}]>"
   end

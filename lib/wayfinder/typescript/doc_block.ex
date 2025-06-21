@@ -11,8 +11,7 @@ defmodule Wayfinder.Typescript.DocBlock do
       route_reference(route)
     ]
     |> Enum.reject(&is_nil/1)
-    |> Enum.map(&" * #{&1}")
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", &" * #{&1}")
     |> then(
       &"""
       /**

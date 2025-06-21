@@ -1,23 +1,64 @@
 defmodule Wayfinder.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+
   def project do
     [
       app: :wayfinder,
-      version: "0.1.0",
+      name: "Wayfinder",
+      version: @version,
+      package: package(),
       elixir: "~> 1.17",
-      start_permanent: Mix.env() == :prod,
+      source_url: links()["GitHub"],
+      homepage_url: links()["GitHub"],
+      docs: docs(),
       deps: deps(),
+      start_permanent: Mix.env() == :prod,
       test_paths: ["test"],
       test_pattern: "*_test.exs",
       test_coverage: [tool: ExCoveralls],
-      elixirc_paths: elixirc_paths(Mix.env())
+      elixirc_paths: elixirc_paths(Mix.env()),
+      dialyzer: [
+        plt_add_apps: [:mix],
+        ignore_warnings_for: [
+          "lib/mix/tasks/generate..ex",
+          "lib/mix/tasks/generate_tests.ex"
+        ]
+      ]
     ]
   end
 
   def application do
     [
       extra_applications: [:logger]
+    ]
+  end
+
+  def links do
+    %{
+      "GitHub" => "https://github.com/andresgutgon/phoenix-wayfinder",
+      "Readme" => "https://github.com/andresgutgon/phoenix-wayfinder/blob/v#{@version}/README.md"
+    }
+  end
+
+  defp docs do
+    [
+      source_ref: "v#{@version}",
+      main: "readme",
+      extras: [
+        "README.md",
+        "LICENSE.md"
+      ]
+    ]
+  end
+
+  defp package do
+    [
+      maintainers: ["Andrés Gutiérrez"],
+      licenses: ["MIT"],
+      links: links(),
+      files: ~w(lib mix.exs README.md LICENSE.md)
     ]
   end
 
@@ -28,6 +69,9 @@ defmodule Wayfinder.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:phoenix, "~> 1.7", optional: true},
       {:file_system, "~> 1.1.0"},
       {:mock, "~> 0.3.0", only: :test}

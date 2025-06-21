@@ -1,6 +1,8 @@
 {
+  "name": "phoenix-wayfinder",
+  "author": "Andrés Gutiérrez",
   "type": "module",
-  "description": "Testing the wayfinder generated routes",
+  "description": "Create Typescript routes from a Phoenix router's routes",
   "scripts": {
     "tc": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint assets/js/",

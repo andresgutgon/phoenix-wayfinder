@@ -65,19 +65,7 @@ defmodule Wayfinder.RoutesWatcher do
   """
   def handle_info({:file_event, _watcher_pid, {path, events}}, state) when is_list(events) do
     if router_file_modified?(path, events) do
-      case compile_router(path, state.compiler_fun) do
-        :ok ->
-          router = Application.get_env(:wayfinder, :router)
-          otp_app = Application.get_env(:wayfinder, :otp_app)
-
-          case state.generator_module.generate(router, otp_app) do
-            :ok -> Logger.info("[wayfinder] routes re-generated")
-            {:error, reason} -> Logger.error("[wayfinder-error]: #{inspect(reason)}")
-          end
-
-        {:error, error} ->
-          Logger.error("Router compilation failed: #{inspect(error)}")
-      end
+      regenerate_routes(path, state)
     end
 
     {:noreply, state}
@@ -91,17 +79,31 @@ defmodule Wayfinder.RoutesWatcher do
   """
   def handle_call(:ping, _from, state), do: {:reply, :pong, state}
 
+  defp regenerate_routes(path, %{compiler_fun: compiler_fun, generator_module: generator_module}) do
+    case compile_router(path, compiler_fun) do
+      :ok ->
+        router = Application.get_env(:wayfinder, :router)
+        otp_app = Application.get_env(:wayfinder, :otp_app)
+
+        case generator_module.generate(router, otp_app) do
+          :ok -> Logger.info("[wayfinder] routes re-generated")
+          {:error, reason} -> Logger.error("[wayfinder-error]: #{inspect(reason)}")
+        end
+
+      {:error, error} ->
+        Logger.error("Router compilation failed: #{inspect(error)}")
+    end
+  end
+
   defp router_file_modified?(path, events) do
     Path.basename(path) == "router.ex" and Enum.any?(events, &(&1 == :modified))
   end
 
   def compile_router(router_path, compiler_fun) when is_function(compiler_fun, 1) do
-    try do
-      compiler_fun.(router_path)
-      :ok
-    rescue
-      e ->
-        {:error, e}
-    end
+    compiler_fun.(router_path)
+    :ok
+  rescue
+    e ->
+      {:error, e}
   end
 end

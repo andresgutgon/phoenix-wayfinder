@@ -1,0 +1,105 @@
+name: Wayfinder  CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  lint_and_test_elixir_and_node:
+    name: Elixir and Node CI
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        elixir: ["1.17"]
+        otp: ["26"]
+
+    env:
+      MIX_ENV: test
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install inotify-tools (for file_system)
+        run: sudo apt-get update && sudo apt-get install -y inotify-tools
+
+      - name: Set up Elixir and OTP
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Ensure pnpm store path exists
+        run: mkdir -p ~/.pnpm-store
+
+      - name: 🛠 Install pnpm
+        run: npm install -g pnpm
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: deps
+          key: deps-${{ runner.os }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: deps-${{ runner.os }}-
+
+      - name: 💾 Cache pnpm store
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('assets/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: 📦 Install dependencies
+        run: pnpm install
+
+      - name: Create PLT directory
+        run: mkdir -p priv/plts
+
+      - name: Cache PLT files
+        uses: actions/cache@v3
+        with:
+          path: priv/plts
+          key: plt-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          restore-keys: plt-${{ runner.os }}-
+
+      - name: Run Credo
+        run: mix credo --strict
+
+      - name: Elixir Tests
+        run: mix test
+
+      - name: Install workbench (Phoenix test app) deps
+        working-directory: workbench
+        run: mix deps.get
+
+      - name: Node Tests
+        run: pnpm run test
+
+      - name: ✅ Typecheck (tsc)
+        run: pnpm run tc
+
+      - name: 🧹 Lint (eslint)
+        run: pnpm run lint
+
+      - name: 🎨 Prettier check
+        run: pnpm run prettier:check
+
+      - name: Build PLT
+        run: mix dialyzer --plt --plt-core-path priv/plts --plt-local-path priv/plts --no-check --quiet
+
+      - name: Run Dialyzer
+        run: mix dialyzer
+

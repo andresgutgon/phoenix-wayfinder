@@ -50,13 +50,11 @@ defmodule Wayfinder.Typescript.BuildParams do
 
       glob_param ->
         object =
-          params
-          |> Enum.map(fn
+          Enum.map_join(params, ", ", fn
             %{glob: true, name: n} -> "#{n}: (#{ts_type})[]"
             %{optional: true, name: n} -> "#{n}?: #{ts_type}"
             %{name: n} -> "#{n}: #{ts_type}"
           end)
-          |> Enum.join(", ")
           |> then(&"{ #{&1} }")
 
         object

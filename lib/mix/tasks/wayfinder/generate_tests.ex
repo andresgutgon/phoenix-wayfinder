@@ -41,7 +41,7 @@ if Mix.env() == :test do
     # This function writes an outdated generated JS controller file
     # to the workbench assets/js/actions folder to prove the system
     # do the cleanup before generating new files.
-    defp write_outdated_controller() do
+    defp write_outdated_controller do
       sentinel =
         Path.expand(
           "workbench/assets/js/actions/OutdatedController/index.ts",
