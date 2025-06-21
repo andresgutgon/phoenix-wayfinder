@@ -8,6 +8,8 @@ defmodule Wayfinder.MixProject do
       app: :wayfinder,
       name: "Wayfinder",
       version: @version,
+      description:
+        "Wayfinder generates TypeScript client helpers from Phoenix routes for use with Inertia.js or similar frameworks.",
       package: package(),
       elixir: "~> 1.17",
       source_url: links()["GitHub"],
