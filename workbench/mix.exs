@@ -29,7 +29,7 @@ defmodule Workbench.MixProject do
       {:phoenix, "~> 1.8.0-rc.0", override: true},
       {:phoenix_html, "~> 4.1"},
       {:floki, ">= 0.30.0", only: :test},
-      {:wayfinder, path: "../"}
+      {:wayfinder_ex, path: "../"}
     ]
   end
 
