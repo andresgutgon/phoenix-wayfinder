@@ -57,6 +57,7 @@ defmodule Wayfinder.MixProject do
 
   defp package do
     [
+      name: :wayfinder_ex,
       maintainers: ["Andrés Gutiérrez"],
       licenses: ["MIT"],
       links: links(),
