@@ -6,7 +6,7 @@ defmodule Wayfinder.MixProject do
   def project do
     [
       app: :wayfinder,
-      name: "Wayfinder",
+      name: "Wayfinder Ex",
       version: @version,
       description:
         "Wayfinder generates TypeScript client helpers from Phoenix routes for use with Inertia.js or similar frameworks.",
