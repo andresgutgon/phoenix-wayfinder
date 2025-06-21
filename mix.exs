@@ -5,7 +5,7 @@ defmodule Wayfinder.MixProject do
 
   def project do
     [
-      app: :wayfinder,
+      app: :wayfinder_ex,
       name: "Wayfinder Ex",
       version: @version,
       description:
