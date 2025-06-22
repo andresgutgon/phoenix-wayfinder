@@ -39,8 +39,8 @@ defmodule Wayfinder.MixProject do
 
   def links do
     %{
-      "GitHub" => "https://github.com/andresgutgon/phoenix-wayfinder",
-      "Readme" => "https://github.com/andresgutgon/phoenix-wayfinder/blob/v#{@version}/README.md"
+      "GitHub" => "https://github.com/andresgutgon/wayfinder_ex",
+      "Readme" => "https://github.com/andresgutgon/wayfinder_ex/blob/v#{@version}/README.md"
     }
   end
 

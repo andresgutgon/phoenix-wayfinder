@@ -17,7 +17,7 @@ config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-config :wayfinder,
+config :wayfinder_ex,
   otp_app: :workbench,
   router: WorkbenchWeb.Router,
   ignore_paths: ["^/backoffice"]

@@ -15,8 +15,8 @@ defmodule Wayfinder.RoutesWatcherTest do
       GenServer.stop(RoutesWatcher, :normal, 1000)
     end
 
-    Application.put_env(:wayfinder, :router, @router_module)
-    Application.put_env(:wayfinder, :otp_app, :test_app)
+    Application.put_env(:wayfinder_ex, :router, @router_module)
+    Application.put_env(:wayfinder_ex, :otp_app, :test_app)
     :ok
   end
 
@@ -173,8 +173,8 @@ defmodule Wayfinder.RoutesWatcherTest do
     end
 
     test "handles missing router configuration gracefully", %{watcher_pid: watcher_pid} do
-      Application.delete_env(:wayfinder, :router)
-      Application.delete_env(:wayfinder, :otp_app)
+      Application.delete_env(:wayfinder_ex, :router)
+      Application.delete_env(:wayfinder_ex, :otp_app)
 
       router_path = "/path/to/router.ex"
       events = [:modified]

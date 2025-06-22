@@ -82,8 +82,8 @@ defmodule Wayfinder.RoutesWatcher do
   defp regenerate_routes(path, %{compiler_fun: compiler_fun, generator_module: generator_module}) do
     case compile_router(path, compiler_fun) do
       :ok ->
-        router = Application.get_env(:wayfinder, :router)
-        otp_app = Application.get_env(:wayfinder, :otp_app)
+        router = Application.get_env(:wayfinder_ex, :router)
+        otp_app = Application.get_env(:wayfinder_ex, :otp_app)
 
         case generator_module.generate(router, otp_app) do
           :ok -> Logger.info("[wayfinder] routes re-generated")

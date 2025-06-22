@@ -53,7 +53,7 @@ defmodule Wayfinder.Processor.IgnoreFilter do
 
   @spec get_configured_patterns() :: {:ok, [String.t()]} | {:error, Error.t()}
   defp get_configured_patterns do
-    case Application.get_env(:wayfinder, :ignore_paths, []) do
+    case Application.get_env(:wayfinder_ex, :ignore_paths, []) do
       patterns when is_list(patterns) ->
         if Enum.all?(patterns, &is_binary/1) do
           {:ok, patterns}

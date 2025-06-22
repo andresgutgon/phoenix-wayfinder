@@ -10,7 +10,7 @@ defmodule Wayfinder.PhoenixRouter do
   end
 
   def after_compile(env, _bytecode) do
-    otp_app = Application.get_env(:wayfinder, :otp_app)
+    otp_app = Application.get_env(:wayfinder_ex, :otp_app)
     case Wayfinder.generate(env.module, otp_app) do
       :ok -> IO.puts("[wayfinder] routes generation succeeded")
       {:error, reason} -> IO.puts("JS routes generation failed: #{inspect(reason)}")
