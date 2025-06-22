@@ -48,6 +48,17 @@ mix deps.get
 Configure Wayfinder in your `config/config.exs` file. This configuration specifies which OTP app Wayfinder belongs to and which router to use for generating the TypeScript functions.
 
 ```elixir
+# config/config.exs
+config :wayfinder_ex,
+  otp_app: :my_app,
+  router: MyApp.Router,
+
+  # Optional: Specify paths to ignore when generating routes
+  # ignore_paths: ["^/backoffice"]
+```
+
+```elixir
+# lib/my_app_web/router.ex
 defmodule MyApp.Router do
   use MyApp, :router
   +  use Wayfinder.PhoenixRouter

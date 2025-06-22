@@ -7,8 +7,8 @@ defmodule Mix.Tasks.Wayfinder.Generate do
   def run(_args) do
     Mix.Task.run("compile")
 
-    router = Application.get_env(:wayfinder, :router)
-    otp_app = Application.get_env(:wayfinder, :otp_app)
+    router = Application.get_env(:wayfinder_ex, :router)
+    otp_app = Application.get_env(:wayfinder_ex, :otp_app)
 
     case Wayfinder.generate(router, otp_app) do
       :ok ->

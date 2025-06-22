@@ -1,3 +1,9 @@
+## [v0.1.3](https://github.com/andresgutgon/wayfinder_ex/compare/v0.1.2...v0.1.3) - 22-07-2025
+
+### What's Changed
+* Fix after renaming `wayfinder` to `wayfinder_ex`
+* More changes to the README.md. Missing config step
+
 ## [v0.1.2](https://github.com/andresgutgon/wayfinder_ex/compare/v0.1.1...v0.1.2) - 21-07-2025
 
 ### What's Changed
