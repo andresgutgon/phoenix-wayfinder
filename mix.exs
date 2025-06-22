@@ -1,7 +1,7 @@
 defmodule Wayfinder.MixProject do
   use Mix.Project
 
-  @version "0.1.4"
+  @version "0.1.5"
 
   def project do
     [
@@ -61,7 +61,7 @@ defmodule Wayfinder.MixProject do
       maintainers: ["Andrés Gutiérrez"],
       licenses: ["MIT"],
       links: links(),
-      files: ~w(lib mix.exs README.md LICENSE.md)
+      files: ~w(lib assets mix.exs README.md LICENSE.md)
     ]
   end
 

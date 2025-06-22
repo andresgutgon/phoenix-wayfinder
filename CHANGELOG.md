@@ -1,3 +1,9 @@
+## [v0.1.5](https://github.com/andresgutgon/wayfinder_ex/compare/v0.1.4...v0.1.5) - 22-07-2025
+
+### What's Changed
+
+- Include `assets` in the release!
+
 ## [v0.1.4](https://github.com/andresgutgon/wayfinder_ex/compare/v0.1.3...v0.1.4) - 22-07-2025
 
 ### What's Changed
