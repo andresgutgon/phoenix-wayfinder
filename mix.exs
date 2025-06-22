@@ -1,7 +1,7 @@
 defmodule Wayfinder.MixProject do
   use Mix.Project
 
-  @version "0.1.2"
+  @version "0.1.4"
 
   def project do
     [
