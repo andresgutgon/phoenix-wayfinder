@@ -228,7 +228,7 @@ export default UsersController
 ```
 
 Suppose you want to edit a user. You can use the `edit` function like this with
-Inertia's [useForm](https://inertiajs.com/use-form):
+Inertia's [useForm](https://inertiajs.com/forms#form-helper):
 
 ```typescript
 import { edit } from '@/actions/UsersController'
