@@ -4,10 +4,6 @@
 
 Phoenix Wayfinder seamlessly connects your Phoenix backend with your TypeScript frontend. It automatically generates fully-typed, importable TypeScript functions for your controllers, allowing you to call your Phoenix endpoints directly from your client code as if they were regular functions. No more hardcoded URLs, guessing route parameters, or manually syncing backend changes.
 
-You may notice that this README is very similar to [Laravel's version of Wayfinder](https://github.com/laravel/wayfinder). That is intentional! The goal is to provide a consistent experience across frameworks. This package adapts the great ideas from the Laravel version to the Phoenix ecosystem, so you can enjoy the same benefits in your Phoenix applications.
-
-Thank you to the Laravel team for the inspiration! 🙌
-
 > [!IMPORTANT]
 > Wayfinder is currently in Beta. The API may change before the v1.0.0 release. All notable changes will be documented in the [changelog](./CHANGELOG.md).
 
@@ -25,6 +21,7 @@ Thank you to the Laravel team for the inspiration! 🙌
 - [Generated Files](#generated-files)
 - [Usage](#usage)
 - [Checking Current URL](#checking-current-url)
+- [Why the Name "Wayfinder"?](#why-the-name-wayfinder)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -285,7 +282,7 @@ import { show } from '@/actions/SomethingController'
 // This is valid
 show.url() + // No parameters
   // This is also valid
-show.url({ my_parameter: 'value' }) // With parameter
+  show.url({ my_parameter: 'value' }) // With parameter
 ```
 
 ## Checking Current URL
@@ -333,6 +330,12 @@ function MyMenu() {
 
 > [!IMPORTANT]
 > You can pass `exactMatch: true` to the `home.url()` function. This will generate a URL that matches the current path exactly, so you can use it to highlight the current page in your menu. The home menu item will only be selected if the current path is exactly `/`.
+
+## Why the Name "Wayfinder"?
+
+You may notice that this README is very similar to [Laravel's version of Wayfinder](https://github.com/laravel/wayfinder). That is intentional! The goal is to provide a consistent experience across frameworks. This package adapts the great ideas from the Laravel version to the Phoenix ecosystem, so you can enjoy the same benefits in your Phoenix applications.
+
+Thank you to the Laravel team for the inspiration! 🙌
 
 ## Contributing
 
